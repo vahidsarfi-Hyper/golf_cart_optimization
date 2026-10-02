@@ -1,0 +1,182 @@
+.shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0.9rem 1.25rem 2rem;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+.status-dot {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.stat,
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.stat {
+  padding: 0.85rem 1rem;
+}
+
+.stat span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.stat strong {
+  font-size: 1.45rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1rem;
+}
+
+.panel {
+  padding: 1rem;
+}
+
+.panel h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+}
+
+.map {
+  width: 100%;
+  max-height: 420px;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  background: #cfe3c4;
+}
+
+.cart-dot {
+  cursor: pointer;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.filters button {
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+}
+
+.filters button.active {
+  background: var(--green-deep);
+  color: white;
+  border-color: var(--green-deep);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-height: 520px;
+  overflow: auto;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr auto;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+}
+
+.row.selected {
+  outline: 2px solid var(--green);
+}
+
+.row.low {
+  border-color: #f0c7c3;
+}
+
+.meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.bar {
+  height: 8px;
+  background: #e7eee5;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 0.35rem;
+}
+
+.bar > i {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+}
+
+.bar.low > i {
+  background: var(--danger);
+}
+
+.power {
+  font-size: 0.8rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.power.on {
+  color: var(--ok);
+}
+
+.power.off {
+  color: var(--warn);
+}
+
+.error {
+  color: var(--danger);
+}
+
+@media (max-width: 860px) {
+  .stats,
+  .layout,
+  .row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,30 @@
+:root {
+  color-scheme: light;
+  --bg: #eef3ea;
+  --panel: #f7faf4;
+  --ink: #1c2a1d;
+  --muted: #5c6b5e;
+  --line: #d5e0d2;
+  --green: #2f6b3a;
+  --green-deep: #1e4a28;
+  --fairway: #4f8a4c;
+  --sand: #e6d5a8;
+  --warn: #b45309;
+  --danger: #b42318;
+  --ok: #1f7a3a;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+button {
+  font: inherit;
+}
