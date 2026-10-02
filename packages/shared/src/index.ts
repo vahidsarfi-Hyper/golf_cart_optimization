@@ -19,6 +19,6 @@ export function isLowBattery(cart: Cart): boolean {
 
 export function powerLabel(cart: Cart): string {
   if (cart.status === "offline") return "No signal";
-  if (cart.powerConnected) return "On charger";
+  if (cart.powerConnected) return "Plugged";
   return "Unplugged";
 }

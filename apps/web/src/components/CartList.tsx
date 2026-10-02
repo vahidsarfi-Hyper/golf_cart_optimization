@@ -2,7 +2,12 @@ import type { Cart } from "shared";
 import { isLowBattery, powerLabel } from "shared";
 import { filterCarts, type Filter } from "../cartView";
 
-const FILTERS: Filter[] = ["all", "charging", "unplugged", "low"];
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: "all", label: "all" },
+  { id: "charging", label: "plugged" },
+  { id: "unplugged", label: "unplugged" },
+  { id: "offline", label: "No signal" }
+];
 
 export function CartList({
   carts,
@@ -23,8 +28,13 @@ export function CartList({
     <div>
       <div className="filters">
         {FILTERS.map((item) => (
-          <button key={item} type="button" className={filter === item ? "active" : ""} onClick={() => onFilter(item)}>
-            {item}
+          <button
+            key={item.id}
+            type="button"
+            className={`tone-${item.id}${filter === item.id ? " active" : ""}`}
+            onClick={() => onFilter(item.id)}
+          >
+            {item.label}
           </button>
         ))}
       </div>
@@ -47,10 +57,16 @@ export function CartList({
               </div>
               <div className="meta">Updated {new Date(cart.lastUpdated).toLocaleTimeString()}</div>
             </div>
-            <div className={`power ${cart.powerConnected ? "on" : "off"}`}>{powerLabel(cart)}</div>
+            <div className={`power ${powerTone(cart)}`}>{powerLabel(cart)}</div>
           </article>
         ))}
       </div>
     </div>
   );
+}
+
+function powerTone(cart: Cart): "on" | "off" | "offline" {
+  if (cart.status === "offline") return "offline";
+  if (cart.powerConnected) return "on";
+  return "off";
 }

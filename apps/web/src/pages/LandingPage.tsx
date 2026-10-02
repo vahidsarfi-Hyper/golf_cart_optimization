@@ -25,7 +25,7 @@ export function LandingPage() {
         <h2>Energy Balance</h2>
         <div className="energy-cols">
           <div className="status-col">
-            <h3>Current status</h3>
+            <h3>Current status (10:00 AM)</h3>
             <EnergyTile to="/solar" name="Solar Production" headline={`${formatSolarKw(nowSample.solarKw)} kW`} />
             <EnergyTile
               to="/battery"
@@ -37,7 +37,7 @@ export function LandingPage() {
             <EnergyTile to="/trips" name="Trips schedules" headline={`${roundsOnCourse.length} rounds now`} />
           </div>
           <div className="forecast-col">
-            <h3>Forecast</h3>
+            <h3>Forecast (upto 06:00 PM)</h3>
             <EnergyTile to="/forecast/solar" name="Solar Forecast" headline={headlines.solar} />
             <EnergyTile to="/forecast/capacity" name="Capacity Forecast" headline={headlines.capacity} />
             <EnergyTile to="/forecast/demand" name="Demand Forecast & Future Price" headline={headlines.demand} />

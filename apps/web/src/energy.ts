@@ -283,7 +283,7 @@ export const cartEnergy = CARTS.map((cart, index) => ({
   hundredths: socNow[index],
   kwh: formatKwh(socNow[index]),
   percent: (Math.round((socNow[index] / 6) * 10) / 10).toString(),
-  charger: cart.offline ? "No signal" : roundAt(cart, NOW) ? "Unplugged" : plugged(cart, NOW) ? "On charger" : "Unplugged"
+  charger: cart.offline ? "No signal" : roundAt(cart, NOW) ? "Unplugged" : plugged(cart, NOW) ? "Plugged" : "Unplugged"
 }));
 
 function usedHundredths(cart: CartDef, round: Round): number {

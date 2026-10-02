@@ -14,7 +14,7 @@ export default function App() {
 
   return (
     <div className="shell">
-      <NavBar path={path} />
+      {path !== "/" ? <NavBar path={path} /> : null}
       <Routes path={path} />
     </div>
   );

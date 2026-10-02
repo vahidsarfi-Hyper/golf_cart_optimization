@@ -26,7 +26,7 @@ export function FleetPage() {
         </div>
         <div className="stats fleet-stats">
           <Stat label="Fleet" value={carts.length} />
-          <Stat label="On charger" value={charging} />
+          <Stat label="Plugged" value={charging} />
           <Stat label="Unplugged" value={unplugged} />
           <Stat label="Low battery" value={low} />
         </div>

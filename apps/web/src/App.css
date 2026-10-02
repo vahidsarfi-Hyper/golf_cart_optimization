@@ -116,30 +116,44 @@ h3 {
   display: grid;
   grid-template-columns: 0.86fr 1.14fr;
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .fleet-card,
 .energy-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   background: #e6e6e6;
   border: 1px solid #c8c8c8;
   border-radius: 18px;
-  padding: 0.9rem 0.95rem 1rem;
+  padding: 0.75rem 0.85rem 0.8rem;
+}
+
+.dash h2 {
+  margin-bottom: 0.45rem;
+}
+
+.dash h3 {
+  margin: 0.45rem 0 0.3rem;
 }
 
 .energy-cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.7rem;
+  gap: 0.55rem;
+  flex: 1;
+  min-height: 0;
 }
 
 .status-col,
 .forecast-col {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
+  gap: 0.42rem;
   border-radius: 14px;
-  padding: 0.55rem;
+  padding: 0.48rem;
+  min-height: 0;
 }
 
 .status-col {
@@ -163,9 +177,10 @@ h3 {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 0.25rem;
-  min-height: 92px;
-  padding: 0.75rem 0.8rem;
+  gap: 0.15rem;
+  flex: 1 1 auto;
+  min-height: 70px;
+  padding: 0.55rem 0.7rem;
   background: #f7f7f7;
   border-radius: 12px;
   text-decoration: none;
@@ -178,7 +193,7 @@ h3 {
 }
 
 .energy-tile strong {
-  font-size: 1rem;
+  font-size: 0.92rem;
 }
 
 .energy-tile em {
@@ -189,9 +204,9 @@ h3 {
 
 .opt-oval {
   display: block;
-  margin: 1rem auto 0.2rem;
-  width: 220px;
-  min-height: 76px;
+  margin: 0.75rem auto 0.1rem;
+  width: 196px;
+  min-height: 62px;
   border: none;
   border-radius: 999px;
   background: #1d5f8a;
@@ -303,6 +318,39 @@ h3 {
   border-color: var(--green-deep);
 }
 
+.filters button.tone-charging {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.filters button.tone-charging.active {
+  background: var(--ok);
+  color: white;
+  border-color: var(--ok);
+}
+
+.filters button.tone-unplugged {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.filters button.tone-unplugged.active {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+
+.filters button.tone-offline {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.filters button.tone-offline.active {
+  background: var(--ink);
+  color: white;
+  border-color: var(--ink);
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -311,8 +359,20 @@ h3 {
   overflow: auto;
 }
 
+.fleet-card .map {
+  max-height: 236px;
+}
+
+.fleet-card .filters {
+  margin-bottom: 0.5rem;
+}
+
 .fleet-card .list {
-  max-height: 280px;
+  max-height: 11.2rem;
+}
+
+.fleet-card .row {
+  padding: 0.52rem 0.62rem;
 }
 
 .row {
@@ -369,7 +429,11 @@ h3 {
 }
 
 .power.off {
-  color: var(--warn);
+  color: var(--danger);
+}
+
+.power.offline {
+  color: var(--ink);
 }
 
 .error {
