@@ -2,7 +2,7 @@
 
 See every golf cart on a course, its battery level, and whether it is plugged into the charging system.
 
-This is a **browser prototype**: a React web app talks to a local API. Mock carts update on a timer so battery and charger status feel live. Real vehicles, cloud hosting, and Android / iOS / Windows apps come later; they can reuse the same API and shared types.
+This is a **browser prototype**. The pages show mock carts, battery level, and charger status. Real vehicles and Android / iOS / Windows apps come later; they can reuse the same API and shared types.
 
 ## Run
 
@@ -26,11 +26,10 @@ Then open http://localhost:5173
 - `packages/shared` — cart types used by both
 - `docs/brief.md` — prototype scope
 
-## GitHub
+## Share a link
 
-When you want this on GitHub:
+The pages already use demo carts in the browser, so a visitor does not need the API. Push the `develop` branch to the public GitHub repo. In the repo, open Settings → Pages and set the source to GitHub Actions. The workflow publishes:
 
-```powershell
-gh auth login
-gh repo create golf_cart_optimization --private --source=. --remote=origin --push
-```
+https://vahidsarfi-hyper.github.io/golf_cart_optimization/
+
+Free GitHub Pages serves public repositories. If the repo is private, change it to public before the first publish. The site updates on each push to `develop`.

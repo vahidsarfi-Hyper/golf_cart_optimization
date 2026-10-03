@@ -2,23 +2,46 @@ import { useEffect, useState, type ReactNode } from "react";
 
 const EVENT = "app-navigate";
 
+function sitePrefix(): string {
+  const base = import.meta.env.BASE_URL;
+  if (base === "/") return "";
+  return base.endsWith("/") ? base.slice(0, -1) : base;
+}
+
 export function normalizePath(path: string): string {
   if (path.length > 1 && path.endsWith("/")) return path.slice(0, -1);
   return path;
 }
 
+export function toHref(to: string): string {
+  const prefix = sitePrefix();
+  if (!prefix) return to;
+  if (to === "/") return `${prefix}/`;
+  return `${prefix}${to}`;
+}
+
+export function fromLocation(pathname: string): string {
+  const prefix = sitePrefix();
+  let path = pathname;
+  if (prefix && (path === prefix || path.startsWith(`${prefix}/`))) {
+    path = path.slice(prefix.length) || "/";
+  }
+  if (!path.startsWith("/")) path = `/${path}`;
+  return normalizePath(path);
+}
+
 export function navigate(to: string): void {
-  const next = normalizePath(to);
-  if (normalizePath(window.location.pathname) === next) return;
+  const next = toHref(to);
+  if (normalizePath(window.location.pathname) === normalizePath(next)) return;
   window.history.pushState({}, "", next);
   window.dispatchEvent(new Event(EVENT));
 }
 
 export function usePath(): string {
-  const [path, setPath] = useState(() => normalizePath(window.location.pathname));
+  const [path, setPath] = useState(() => fromLocation(window.location.pathname));
 
   useEffect(() => {
-    const sync = () => setPath(normalizePath(window.location.pathname));
+    const sync = () => setPath(fromLocation(window.location.pathname));
     window.addEventListener("popstate", sync);
     window.addEventListener(EVENT, sync);
     return () => {
@@ -41,7 +64,7 @@ type LinkProps = {
 export function Link({ to, className, children, ...aria }: LinkProps) {
   return (
     <a
-      href={to}
+      href={toHref(to)}
       className={className}
       aria-label={aria["aria-label"]}
       aria-current={aria["aria-current"]}
