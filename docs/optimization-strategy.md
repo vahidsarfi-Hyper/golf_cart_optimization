@@ -2,7 +2,18 @@
 
 Status: discussion draft (October 2026). Tariff and program numbers are **2026 values taken from utility and regulator documents**. Each one links to its source.
 
-## 0. Confirmed assumptions
+**Contents**
+
+- [0-Confirmed assumptions](#0-confirmed-assumptions)
+- [1-Summary the prototype and the idea](#1-summary-the-prototype-and-the-idea)
+- [2-Opinion where the value really is](#2-opinion-where-the-value-really-is)
+- [3-What golf course owners need pain points and trends](#3-what-golf-course-owners-need-pain-points-and-trends)
+- [4-State comparison California Hawaii New York Florida](#4-state-comparison-california-hawaii-new-york-florida)
+- [5-Optimization design](#5-optimization-design)
+- [6-Next steps for the prototype](#6-next-steps-for-the-prototype)
+- [7-Open questions](#7-open-questions)
+
+## 0-Confirmed assumptions
 
 These were agreed with the product owner before writing. Anything else in this document is labeled as an opinion, an example input, or an open question.
 
@@ -19,7 +30,7 @@ These were agreed with the product owner before writing. Anything else in this d
 
 ---
 
-## 1. Summary: the prototype and the idea
+## 1-Summary the prototype and the idea
 
 ### What exists in the repo today
 
@@ -49,7 +60,7 @@ The course's own situation shapes all of this:
 
 ---
 
-## 2. Opinion: where the value really is
+## 2-Opinion where the value really is
 
 ### 2.1 Demand charges first, arbitrage second
 
@@ -57,7 +68,7 @@ In all four states the biggest lever is the **demand charge**: a $/kW fee on the
 
 Pure time-of-use energy arbitrage is **thin** for most of these tariffs:
 
-- PG&E B-19 summer peak versus off-peak is about **18.6 vs 12.0 cents per kWh**, a spread of about 6.6 cents ([PG&E B-19](https://www.pge.com/tariffs/assets/pdf/tariffbook/ELEC_SCHEDS_B-19.pdf)).
+- PG&E B-19 summer peak versus off-peak is about **18.6 vs 12.0 cents per kWh**, a spread of about 6.6 cents.
 - FPL GSDT-1 on-peak versus off-peak base energy is **6.0 vs 1.5 cents per kWh** ([FPL rates](https://www.fpl.com/content/dam/fplgp/us/en/rates/pdf/business-rates-sept2026.pdf)).
 - After about 10-15% round-trip loss and battery wear (see 2.4), those spreads mostly disappear.
 
@@ -112,7 +123,7 @@ So **about $1.3k-8.4k per month per 100 kW**, which is about $15k-70k per year. 
 A simple, widely used way to price wear is to divide the pack replacement cost by its lifetime energy throughput:
 
 $$
-\kappa \;[\$/\text{kWh discharged}] \approx \frac{C_\text{pack}\;[\$/\text{kWh}]}{N_\text{cycles}\times DoD}
+\kappa\ [\mathrm{USD}/\mathrm{kWh\ discharged}] \approx \frac{C_{\mathrm{pack}}\ [\mathrm{USD}/\mathrm{kWh}]}{N_{\mathrm{cycles}}\times \mathrm{DoD}}
 $$
 
 ([method reference](https://exa.ai/library/publication/8k33m50q0ps); LFP is typically rated at 2,500-9,000 equivalent full cycles, [source](https://sunlithenergy.com/calendar-aging-vs-cycle-aging/)).
@@ -148,7 +159,7 @@ This is an opinion to test in the site-assessment simulator, not a decision.
 
 ---
 
-## 3. What golf course owners need: pain points and trends
+## 3-What golf course owners need pain points and trends
 
 ### 3.1 Pain points (from 2026 industry sources)
 
@@ -182,7 +193,7 @@ This is an opinion to test in the site-assessment simulator, not a decision.
 
 ---
 
-## 4. State comparison: California, Hawaii, New York, Florida
+## 4-State comparison California Hawaii New York Florida
 
 A typical 18-hole course with a clubhouse peaks somewhere around 100-500 kW, depending on the pump station and the clubhouse. That usually puts it on a **medium commercial demand tariff**. The rate named below for each state is the usual default; the right one depends on the site's actual peak.
 
@@ -271,7 +282,7 @@ One general rule applies in every state: **export credits mostly pay for renewab
 
 ---
 
-## 5. Optimization design
+## 5-Optimization design
 
 ### 5.1 Yes to both: a real-time loop *and* look-ahead planning
 
@@ -280,23 +291,7 @@ Neither layer works alone:
 - **Look-ahead alone fails on demand charges.** A demand charge is set by the average power over one 15-minute interval. If a pump starts at minute 3, a plan made at minute 0 is already wrong. Something has to react within seconds to keep this interval's average under target.
 - **Real-time alone fails on readiness and energy.** A purely reactive controller doesn't know that 40 carts tee off at 7 AM, that pumps run until 5 AM, or that tomorrow at 4 PM is a demand-response event. It drains carts on the current spike and leaves them empty for the next peak or the next round.
 
-So the design is a **hierarchy**. Slow layers set targets and budgets; fast layers follow them.
-
-```mermaid
-flowchart TD
-    Forecasts["Forecasts: solar, site load, irrigation, tee sheet, prices, DR events"] --> MonthPlanner
-    Forecasts --> DayAhead
-    Forecasts --> LookAhead
-    Seasonal["Seasonal planner: tariff and program choice"] --> MonthPlanner
-    MonthPlanner["Billing-cycle planner: daily, peak target per demand window"] --> LookAhead
-    DayAhead["Day-ahead commitment: DR bids, BYOD window, readiness plan"] --> LookAhead
-    LookAhead["Look-ahead MPC: every 15 min, 24-36 h horizon"] --> RealTime
-    RealTime["Real-time controller: every 5-60 s, interval-average guard"] --> Carts["Onboard inverters and BMS"]
-    Meter["Site meter / CT data"] --> RealTime
-    Carts --> Telemetry["Telemetry: SOC, plugged, temperature, location"]
-    Telemetry --> LookAhead
-    Telemetry --> RealTime
-```
+So the design is a **hierarchy**. Slow layers set targets and budgets. Fast layers follow those targets.
 
 ### 5.2 Timings
 
@@ -319,44 +314,44 @@ Why these numbers:
 
 **Sets**
 
-- $\mathcal{I}$: carts. $\mathcal{T}$: time steps of length $\Delta t = 0.25$ h over the horizon.
-- $\mathcal{R}$: rounds (tee-time groups that need carts).
-- $\mathcal{W}$: demand windows, such as *anytime maximum*, *summer peak* and *part-peak*, each active on a set of steps $\mathcal{T}_w$.
-- $\mathcal{E}$: demand-response events (committed or candidate).
+- $$\mathcal{I}$$: carts. $$\mathcal{T}$$: time steps of length $$\Delta t = 0.25$$ h over the horizon.
+- $$\mathcal{R}$$: rounds (tee-time groups that need carts).
+- $$\mathcal{W}$$: demand windows, such as *anytime maximum*, *summer peak* and *part-peak*, each active on a set of steps $$\mathcal{T}_w$$.
+- $$\mathcal{E}$$: demand-response events (committed or candidate).
 
 **Inputs (forecasts and parameters)**
 
-- $L_t$: non-cart load on **the meter the carts are on**. It includes the pumps only in the one-meter case.
-- $PV_t$: solar production behind that meter.
-- $\pi^{imp}_t$ and $\pi^{exp}_t$: import and export energy prices. $\pi^{exp}_t = 0$, or export is disallowed, where it isn't paid.
-- $c_w$: demand charge in $/kW. $D^\star_w$: peak target from the billing-cycle planner, at least the month-to-date peak $\bar D_w$.
-- $\tau_r$: tee step of round $r$. $n_r$: carts round $r$ needs. $o_{r,t} = 1$ while round $r$ is out, including a turnaround buffer. $e_{r,t}$: energy round $r$ uses per cart in step $t$. $E_r = \sum_t e_{r,t}$.
-- $h_{i,t} = 1$ if cart $i$ is expected to be on a plug when not on a round (staff behavior, maintenance).
-- Cart limits: $\overline{P}$ (1.5, 3 or 6 kW), $\eta^c$ and $\eta^d$ (charge and discharge efficiency), $\underline{S}$ and $\overline{S}_{t}$ (energy floor and ceiling; the ceiling can rise to 100% just before a tee time).
-- $\kappa$: wear cost per kWh discharged (section 2.4). $m$: readiness margin (for example 20%).
-- $G^{imp}$: service or transformer import limit. $G^{exp}$: export limit (0 for non-export sites). $B_t$: demand-response baseline. $\rho_e$: demand-response value per kW.
+- $$L_t$$: non-cart load on **the meter the carts are on**. It includes the pumps only in the one-meter case.
+- $$PV_t$$: solar production behind that meter.
+- $$\pi^{imp}_t$$ and $$\pi^{exp}_t$$: import and export energy prices. $$\pi^{exp}_t = 0$$, or export is disallowed, where it isn't paid.
+- $$c_w$$: demand charge in <span>$</span>/kW. $$D^\star_w$$: peak target from the billing-cycle planner, at least the month-to-date peak $$\bar D_w$$.
+- $$\tau_r$$: tee step of round $$r$$. $$n_r$$: carts round $$r$$ needs. $$o_{r,t} = 1$$ while round $$r$$ is out, including a turnaround buffer. $$e_{r,t}$$: energy round $$r$$ uses per cart in step $$t$$. $$E_r = \sum_t e_{r,t}$$.
+- $$h_{i,t} = 1$$ if cart $$i$$ is expected to be on a plug when not on a round (staff behavior, maintenance).
+- Cart limits: $$\overline{P}$$ (1.5, 3 or 6 kW), $$\eta^c$$ and $$\eta^d$$ (charge and discharge efficiency), $$\underline{S}$$ and $$\overline{S}_{t}$$ (energy floor and ceiling; the ceiling can rise to 100% just before a tee time).
+- $$\kappa$$: wear cost per kWh discharged (section 2.4). $$m$$: readiness margin (for example 20%).
+- $$G^{imp}$$: service or transformer import limit. $$G^{exp}$$: export limit (0 for non-export sites). $$B_t$$: demand-response baseline. $$\rho_e$$: demand-response value per kW.
 
 **Decision variables**
 
-- $p^{c}_{i,t},\ p^{d}_{i,t} \ge 0$: charge and discharge power. $s_{i,t}$: stored energy in kWh.
-- $x_{i,r} \in \{0,1\}$: cart $i$ is assigned to round $r$.
-- $g^{+}_t,\ g^{-}_t \ge 0$: grid import and export.
-- $D_w$: billed peak in window $w$. $q_e \ge 0$: kW committed to event $e$.
-- $\delta_{i,r} \ge 0$: readiness shortfall (slack with a large penalty $M$).
+- $$p^{c}_ {i,t}, p^{d}_ {i,t} \ge 0$$: charge and discharge power. $$s_{i,t}$$: stored energy in kWh.
+- $$x_{i,r} \in \{0,1\}$$: cart $$i$$ is assigned to round $$r$$.
+- $$g^{+}_ {t}, g^{-}_ {t} \ge 0$$: grid import and export.
+- $$D_w$$: billed peak in window $$w$$. $$q_e \ge 0$$: kW committed to event $$e$$.
+- $$\delta_{i,r} \ge 0$$: readiness shortfall (slack with a large penalty $$M$$).
 
 **Constraints**
 
 $$
 \begin{aligned}
-&\text{(1) energy balance:} && s_{i,t+1} = s_{i,t} + \eta^c p^c_{i,t}\Delta t - \tfrac{1}{\eta^d} p^d_{i,t}\Delta t - \textstyle\sum_r x_{i,r}\, e_{r,t} \\
-&\text{(2) plugged-in power:} && p^c_{i,t} + p^d_{i,t} \le \overline{P}\, h_{i,t}\,\big(1 - \textstyle\sum_r x_{i,r}\, o_{r,t}\big) \\
-&\text{(3) assignment:} && \textstyle\sum_i x_{i,r} = n_r, \qquad \textstyle\sum_r x_{i,r}\, o_{r,t} \le 1 \\
-&\text{(4) readiness at tee time:} && s_{i,\tau_r} + \delta_{i,r} \ge \underline{S} + (1+m)\,E_r\, x_{i,r} \\
+&\text{(1) energy balance:} && s_{i,t+1} = s_{i,t} + \eta^c p^c_{i,t}\Delta t - \tfrac{1}{\eta^d} p^d_{i,t}\Delta t - \textstyle\sum_r x_{i,r}\thinspace e_{r,t} \\
+&\text{(2) plugged-in power:} && p^c_{i,t} + p^d_{i,t} \le \overline{P}\thinspace h_{i,t}\thinspace\big(1 - \textstyle\sum_r x_{i,r}\thinspace o_{r,t}\big) \\
+&\text{(3) assignment:} && \textstyle\sum_i x_{i,r} = n_r, \qquad \textstyle\sum_r x_{i,r}\thinspace o_{r,t} \le 1 \\
+&\text{(4) readiness at tee time:} && s_{i,\tau_r} + \delta_{i,r} \ge \underline{S} + (1+m)\thinspace E_r\thinspace x_{i,r} \\
 &\text{(5) energy window:} && \underline{S} \le s_{i,t} \le \overline{S}_{t} \\
 &\text{(6) site balance:} && g^+_t - g^-_t = L_t - PV_t + \textstyle\sum_i \big(p^c_{i,t} - p^d_{i,t}\big), \quad g^+_t \le G^{imp}, \quad g^-_t \le G^{exp} \\
 &\text{(7) demand windows:} && D_w \ge g^+_t \ \ \forall t \in \mathcal{T}_w, \qquad D_w \ge D^\star_w \\
 &\text{(8) DR delivery:} && B_t - g^+_t \ge q_e \ \ \forall t \in e \\
-&\text{(9) wear budget:} && \textstyle\sum_t p^d_{i,t}\,\Delta t \le \Theta_i \\
+&\text{(9) wear budget:} && \textstyle\sum_t p^d_{i,t}\thinspace\Delta t \le \Theta_i \\
 &\text{(10) end of horizon:} && s_{i,|\mathcal{T}|} \ge s^{end}_i \ \ \text{(or value leftover energy in the objective)}
 \end{aligned}
 $$
@@ -364,36 +359,36 @@ $$
 **Objective (minimize)**
 
 $$
-\min\ \underbrace{\sum_t \big(\pi^{imp}_t g^+_t - \pi^{exp}_t g^-_t\big)\Delta t}_{\text{energy}}
-+ \underbrace{\sum_w c_w\,\big(D_w - D^\star_w\big)}_{\text{new demand above target}}
-+ \underbrace{\kappa \sum_{i,t} p^d_{i,t}\,\Delta t}_{\text{battery wear}}
-+ \underbrace{M \sum_{i,r} \delta_{i,r}}_{\text{readiness}}
-- \underbrace{\sum_e \rho_e\, q_e}_{\text{DR / VPP revenue}}
+\min\ \underbrace{\sum_t \big(\pi^{imp}_t g^+_t - \pi^{exp}_t g^-_t\big)\Delta t}_{\text{energy}} +
+\underbrace{\sum_w c_w\thinspace\big(D_w - D^\star_w\big)}_{\text{new demand above target}} +
+\underbrace{\kappa \sum_{i,t} p^d_{i,t}\thinspace\Delta t}_{\text{battery wear}} +
+\underbrace{M \sum_{i,r} \delta_{i,r}}_{\text{readiness}} -
+\underbrace{\sum_e \rho_e\thinspace q_e}_{\text{DR / VPP revenue}}
 $$
 
 Notes on the model:
 
-- **No charge/discharge binary is needed** as long as $\pi^{exp}_t \le \pi^{imp}_t$, because losses and wear make charging and discharging at the same time unprofitable. Without that binary the only integers are the assignments $x$.
-- **Which cart goes out** ($x$) is a real lever. Sending the fullest carts out first lets the optimizer use the rest as the battery. If tee-sheet data isn't available yet, fix $x$ with a simple rule and drop it from the model.
-- **Hawaii's ratchet** is modeled by raising $c_w$ to reflect the extra months a new peak keeps costing.
-- **Metering topology** only changes $L_t$, $PV_t$ and the windows: one meter (pumps inside $L_t$) or a separate pump meter (pumps excluded).
+- **No charge/discharge binary is needed** as long as $$\pi^{exp}_ t \le \pi^{imp}_ t$$, because losses and wear make charging and discharging at the same time unprofitable. Without that binary the only integers are the assignments $$x$$.
+- **Which cart goes out** ($$x$$) is a real lever. Sending the fullest carts out first lets the optimizer use the rest as the battery. If tee-sheet data isn't available yet, fix $$x$$ with a simple rule and drop it from the model.
+- **Hawaii's ratchet** is modeled by raising $$c_w$$ to reflect the extra months a new peak keeps costing.
+- **Metering topology** only changes $$L_t$$, $$PV_t$$ and the windows: one meter (pumps inside $$L_t$$) or a separate pump meter (pumps excluded).
 
 ### 5.4 Demand charges are monthly, the horizon is 1-2 days
 
 This is the subtle part. The demand charge is set once per month, but the MPC sees only the next 36 hours.
 
-- If the model prices *any* import above the month-to-date peak $\bar D_w$, then on day 1 of the month (when $\bar D_w \approx 0$) it tries to flatten everything and drains the fleet for nothing.
+- If the model prices *any* import above the month-to-date peak $$\bar D_w$$, then on day 1 of the month (when $$\bar D_w \approx 0$$) it tries to flatten everything and drains the fleet for nothing.
 - If it ignores demand charges, it lets a spike through and pays for it all month.
 
-The fix is the **billing-cycle planner**. Each night it simulates the rest of the month (expected and worst-case days) and picks a **target** $D^\star_w$ the fleet can realistically defend every day: the lowest peak the fleet can hold, given expected spikes and its energy. The MPC then only pays for exceeding the target. As the month goes on, $D^\star_w$ never drops below what has actually been billed ($\bar D_w$). In effect this is "set the bar, then defend it".
+The fix is the **billing-cycle planner**. Each night it simulates the rest of the month (expected and worst-case days) and picks a **target** $$D^\star_w$$ the fleet can realistically defend every day: the lowest peak the fleet can hold, given expected spikes and its energy. The MPC then only pays for exceeding the target. As the month goes on, $$D^\star_w$$ never drops below what has actually been billed ($$\bar D_w$$). In effect this is "set the bar, then defend it".
 
 ### 5.5 Real-time controller
 
-Inputs are live site power from the meter or a current transformer, plus cart telemetry. Every 5-60 seconds within demand interval $k$:
+Inputs are live site power from the meter or a current transformer, plus cart telemetry. Every 5-60 seconds within demand interval $$k$$:
 
-1. Measure the energy imported so far in the interval, $E_k(\tau)$, and the time left, $T_{rem}$.
-2. Compute the **average import still allowed** for the rest of the interval without beating the target: $\bar p_{allow} = \big(D^\star \cdot 0.25\text{ h} - E_k(\tau)\big) / T_{rem}$.
-3. Set the fleet command as **MPC setpoint plus correction**, so that non-cart load plus net fleet power stays at or below $\bar p_{allow}$. Clamp it to the available charge and discharge power.
+1. Measure the energy imported so far in the interval, $$E_k(\tau)$$, and the time left, $$T_{rem}$$.
+2. Compute the **average import still allowed** for the rest of the interval without beating the target: $$\bar p_ {allow} = \big(D^\star \cdot 0.25\text{ h} - E_k(\tau)\big) / T_ {rem}$$.
+3. Set the fleet command as **MPC setpoint plus correction**, so that non-cart load plus net fleet power stays at or below $$\bar p_{allow}$$. Clamp it to the available charge and discharge power.
 4. **Split the command across carts** by priority:
    - Discharge from carts with the most charge above their next-round requirement and the longest time until they're needed.
    - Charge first the carts with the soonest tee time.
@@ -404,11 +399,11 @@ Because demand is an **interval average**, the controller can tolerate a brief o
 
 ### 5.6 Handling uncertainty
 
-- **Peak buffer**: aim at $D^\star - \beta$, where $\beta$ is roughly the 90th-percentile 15-minute forecast error of site load. Pump starts and HVAC are the main error sources.
-- **Readiness margin** $m$ and a minimum floor so a cart always finishes its round. Plan for the **80th-percentile** number of carts needed (walk-ins, groups adding carts) rather than the booked count.
+- **Peak buffer**: aim at $$D^\star - \beta$$, where $$\beta$$ is roughly the 90th-percentile 15-minute forecast error of site load. Pump starts and HVAC are the main error sources.
+- **Readiness margin** $$m$$ and a minimum floor so a cart always finishes its round. Plan for the **80th-percentile** number of carts needed (walk-ins, groups adding carts) rather than the booked count.
 - **Scenario-based MPC (next step)**: optimize over several scenarios for solar, load and rounds. The first-step decisions are shared across scenarios; minimize expected cost, or add a CVaR (worst-tail) term on peak cost.
 - **Chance constraints** for readiness, for example "a shortfall probability of at most 1% per round".
-- **Learning loop**: compare plan with actual each day and tune $\beta$, $m$ and the forecasts per site.
+- **Learning loop**: compare plan with actual each day and tune $$\beta$$, $$m$$ and the forecasts per site.
 
 ### 5.7 Alternative approaches
 
@@ -446,7 +441,7 @@ Open-source **HiGHS** should solve this in seconds to tens of seconds; a time li
 
 ---
 
-## 6. Next steps for the prototype
+## 6-Next steps for the prototype
 
 These keep to the repo rules: types in `packages/shared`, UI in `apps/web`, API in `apps/api`, no native apps.
 
@@ -468,7 +463,7 @@ These keep to the repo rules: types in `packages/shared`, UI in `apps/web`, API 
    - The "send this cart next" list.
 7. **Site assessment tool**: upload 12 months of 15-minute interval data, pick a tariff and power scenario (1.5, 3 or 6 kW), and get estimated annual value. This is the first thing to show a course owner.
 
-## 7. Open questions
+## 7-Open questions
 
 - **Solver hosting**: HiGHS in Node (WASM) or `javascript-lp-solver` inside `apps/api`, versus a Python sidecar (HiGHS, CBC, Pyomo). The first keeps one language; the second has better modeling tools.
 - **Hardware interface**: what protocol the onboard inverter speaks (a custom API, OCPP-style messages, or a CAN/BMS bridge), and how fast it accepts setpoints. This sets the real-time loop period.

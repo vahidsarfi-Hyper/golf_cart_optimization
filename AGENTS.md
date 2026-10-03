@@ -6,3 +6,4 @@ Prototype to show golf-course carts, battery percent, and whether each cart is c
 - Web UI in `apps/web`; API in `apps/api`.
 - Do not add native mobile/desktop apps until the web + API slice is solid.
 - Never commit `.env` secrets.
+- When writing Markdown, follow `markdown_convention.md`.

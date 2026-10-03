@@ -28,8 +28,5 @@ Then open http://localhost:5173
 
 ## Share a link
 
-The pages already use demo carts in the browser, so a visitor does not need the API. Push the `develop` branch to the public GitHub repo. In the repo, open Settings → Pages and set the source to GitHub Actions. The workflow publishes:
-
 https://vahidsarfi-hyper.github.io/golf_cart_optimization/
 
-Free GitHub Pages serves public repositories. If the repo is private, change it to public before the first publish. The site updates on each push to `develop`.
