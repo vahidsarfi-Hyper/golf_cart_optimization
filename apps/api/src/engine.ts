@@ -143,7 +143,7 @@ function buildShape(date: string, scale = { club: 1, solar: 1, rounds: 1 }): Day
     carts.push({ id, label: `Cart ${n}`, soc: 4, homePlugged, offline, roundIndex: null });
   }
   const waves: Wave[] = [];
-  const pool = carts.map((cart, index) => index).filter((index) => carts[index].homePlugged);
+  const pool = carts.map((_, index) => index).filter((index) => carts[index].homePlugged);
   let cursor = 0;
   for (let minute = 7 * 60; minute <= 15 * 60 + 30; minute += 30) {
     if (roundScale < 0.7 && minute >= 12 * 60) continue;

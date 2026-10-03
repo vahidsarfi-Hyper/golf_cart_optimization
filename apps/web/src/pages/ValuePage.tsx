@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { valueYear } from "../../../api/src/engine.ts";
 import { useDay } from "../day";
-import { usd } from "../model";
+import { usd, type Meter } from "../model";
 
 type ValueResult = {
   year: number;
@@ -43,7 +44,12 @@ export function ValuePage() {
       })
       .catch((reason: unknown) => {
         if (reason instanceof DOMException && reason.name === "AbortError") return;
-        setError(reason instanceof Error ? reason.message : "The year could not be priced.");
+        try {
+          setResult(valueYear(tariff, meter as Meter, Number(power)) as ValueResult);
+          setError(null);
+        } catch (fallback) {
+          setError(fallback instanceof Error ? fallback.message : "The year could not be priced.");
+        }
         setBusy(false);
       });
     return () => controller.abort();
@@ -61,19 +67,27 @@ export function ValuePage() {
       })
       .filter((row) => row.date && Number.isFinite(row.nonCartKw));
     setBusy(true);
-    const response = await fetch(`/api/value?tariff=${tariff}&powerKw=${power}&meter=${meter}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ rows })
-    });
-    const payload = (await response.json()) as ValueResult & { error?: string };
-    if (!response.ok || payload.error) {
-      setError(payload.error ?? "That file could not be priced.");
-      setBusy(false);
-      return;
+    try {
+      const response = await fetch(`/api/value?tariff=${tariff}&powerKw=${power}&meter=${meter}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ rows })
+      });
+      const payload = (await response.json()) as ValueResult & { error?: string };
+      if (!response.ok || payload.error) throw new Error(payload.error ?? "That file could not be priced.");
+      setResult(payload);
+      setError(null);
+    } catch {
+      const uploaded = rows
+        .map((row) => {
+          const [year, month, day] = row.date.split("-").map(Number);
+          if (!year || !month || !day) return null;
+          return { date: row.date, minute: row.minute, month, weekday: new Date(Date.UTC(year, month - 1, day)).getUTCDay(), nonCartKw: row.nonCartKw };
+        })
+        .filter((row): row is { date: string; minute: number; month: number; weekday: number; nonCartKw: number } => row != null);
+      setResult(valueYear(tariff, meter as Meter, Number(power), uploaded) as ValueResult);
+      setError(null);
     }
-    setResult(payload);
-    setError(null);
     setBusy(false);
   }
 

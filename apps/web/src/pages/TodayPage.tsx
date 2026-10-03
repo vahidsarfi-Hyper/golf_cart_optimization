@@ -3,7 +3,7 @@ import { useDay } from "../day";
 import { usd } from "../model";
 
 export function TodayPage() {
-  const { day, error, meter, setMeter, policy, setPolicy, step, setStep } = useDay();
+  const { day, error, offline, meter, setMeter, policy, setPolicy, step, setStep } = useDay();
   if (error) return <p className="lede">{error}</p>;
   if (!day) return <p className="lede">Loading the day…</p>;
   const now = day.steps[step];
@@ -18,6 +18,7 @@ export function TodayPage() {
           <h1>Today</h1>
           <p className="lede">
             {day.date} · {day.tariffName}. {day.meter === "one" ? "Pumps share the cart meter." : "Pumps are on their own meter, so they are off this chart and off this bill."}
+            {offline ? " This page includes the demo, so it works without the local API." : ""}
           </p>
         </div>
         <div className="choice-row">

@@ -1,9 +1,11 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { buildDay } from "../../api/src/engine.ts";
 import type { DayPayload, Meter, Policy } from "./model";
 
 type DayState = {
   day: DayPayload | null;
   error: string | null;
+  offline: boolean;
   meter: Meter;
   setMeter: (meter: Meter) => void;
   policy: Policy;
@@ -23,6 +25,7 @@ const DayContext = createContext<DayState | null>(null);
 export function DayProvider({ children }: { children: ReactNode }) {
   const [day, setDay] = useState<DayPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [offline, setOffline] = useState(false);
   const [meter, setMeter] = useState<Meter>("one");
   const [policy, setPolicy] = useState<Policy>("plan");
   const [step, setStep] = useState(40);
@@ -43,16 +46,23 @@ export function DayProvider({ children }: { children: ReactNode }) {
       .then((payload) => {
         setDay(payload);
         setError(null);
+        setOffline(false);
       })
       .catch((reason: unknown) => {
         if (reason instanceof DOMException && reason.name === "AbortError") return;
-        setError("Cannot reach the local API. Run npm run dev from the project root.");
+        try {
+          setDay(buildDay(meter, 3, linkLoss ? "c22" : "", meterBlind) as DayPayload);
+          setError(null);
+          setOffline(true);
+        } catch {
+          setError("The demo day could not be built.");
+        }
       });
     return () => controller.abort();
   }, [meter, meterBlind, linkLoss]);
 
   return (
-    <DayContext.Provider value={{ day, error, meter, setMeter, policy, setPolicy, step, setStep, meterBlind, setMeterBlind, linkLoss, setLinkLoss, priorityRule, setPriorityRule }}>
+    <DayContext.Provider value={{ day, error, offline, meter, setMeter, policy, setPolicy, step, setStep, meterBlind, setMeterBlind, linkLoss, setLinkLoss, priorityRule, setPriorityRule }}>
       {children}
     </DayContext.Provider>
   );
