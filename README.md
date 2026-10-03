@@ -28,5 +28,11 @@ Then open http://localhost:5173
 
 ## Share a link
 
+Current prototype:
+
 https://vahidsarfi-hyper.github.io/golf_cart_optimization/
+
+Version two:
+
+https://vahidsarfi-hyper.github.io/golf_cart_optimization/v2/
 
