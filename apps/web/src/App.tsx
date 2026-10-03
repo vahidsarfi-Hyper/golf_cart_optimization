@@ -1,21 +1,43 @@
+import { useEffect } from "react";
 import { NavBar } from "./components/NavBar";
-import { ForecastPage } from "./pages/ForecastPage";
-import { BatteryPage } from "./pages/BatteryPage";
-import { DemandPage } from "./pages/DemandPage";
+import { DayProvider } from "./day";
 import { FleetPage } from "./pages/FleetPage";
-import { LandingPage } from "./pages/LandingPage";
-import { SolarPage } from "./pages/SolarPage";
-import { TripsPage } from "./pages/TripsPage";
-import { Link, usePath } from "./router";
+import { PlanPage } from "./pages/PlanPage";
+import { TodayPage } from "./pages/TodayPage";
+import { ValuePage } from "./pages/ValuePage";
+import { navigate, usePath } from "./router";
 import "./App.css";
 
+const REDIRECTS: Record<string, string> = {
+  "/solar": "/",
+  "/forecast/solar": "/",
+  "/battery": "/",
+  "/forecast/capacity": "/",
+  "/demand": "/",
+  "/forecast/demand": "/",
+  "/trips": "/fleet",
+  "/forecast/trips": "/fleet"
+};
+
 export default function App() {
+  return (
+    <DayProvider>
+      <Shell />
+    </DayProvider>
+  );
+}
+
+function Shell() {
   const path = usePath();
+  const target = REDIRECTS[path];
+  useEffect(() => {
+    if (target) navigate(target);
+  }, [target]);
 
   return (
     <div className="shell">
-      {path !== "/" ? <NavBar path={path} /> : null}
-      <Routes path={path} />
+      <NavBar path={target ?? path} />
+      {target ? null : <Routes path={path} />}
     </div>
   );
 }
@@ -23,30 +45,14 @@ export default function App() {
 function Routes({ path }: { path: string }) {
   switch (path) {
     case "/":
-      return <LandingPage />;
+      return <TodayPage />;
     case "/fleet":
       return <FleetPage />;
-    case "/solar":
-      return <SolarPage />;
-    case "/battery":
-      return <BatteryPage />;
-    case "/demand":
-      return <DemandPage />;
-    case "/trips":
-      return <TripsPage />;
-    case "/forecast/solar":
-      return <ForecastPage key="solar" kind="solar" />;
-    case "/forecast/capacity":
-      return <ForecastPage key="capacity" kind="capacity" />;
-    case "/forecast/demand":
-      return <ForecastPage key="demand" kind="demand" />;
-    case "/forecast/trips":
-      return <ForecastPage key="trips" kind="trips" />;
+    case "/plan":
+      return <PlanPage />;
+    case "/value":
+      return <ValuePage />;
     default:
-      return (
-        <p className="lede">
-          That page is not part of this prototype. <Link to="/">Home</Link>
-        </p>
-      );
+      return <TodayPage />;
   }
 }

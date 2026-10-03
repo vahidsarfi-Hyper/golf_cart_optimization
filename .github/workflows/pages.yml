@@ -2,7 +2,7 @@ name: Publish site
 
 on:
   push:
-    branches: [develop]
+    branches: [develop, prototype-v2]
   workflow_dispatch:
 
 permissions:
@@ -21,18 +21,74 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout current prototype
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          path: current
+
+      - name: Checkout version two
+        uses: actions/checkout@v4
+        with:
+          ref: prototype-v2
+          path: v2
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm run build -w web
+          cache-dependency-path: |
+            current/package-lock.json
+            v2/package-lock.json
+
+      - name: Build current prototype
+        working-directory: current
+        run: npm ci && npm run build -w web
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
+
+      - name: Build version two
+        working-directory: v2
+        run: npm ci && npm run build -w web
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/v2/
+
+      - name: Assemble site
+        env:
+          REPO: ${{ github.event.repository.name }}
+        run: |
+          mkdir -p site/v2
+          cp -a current/apps/web/dist/. site/
+          cp -a v2/apps/web/dist/. site/v2/
+          cat > site/404.html << EOF
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <title>Golf Cart Optimization</title>
+            <script>
+              (function () {
+                var repo = "/${REPO}";
+                var path = location.pathname;
+                var v2 = path === repo + "/v2" || path.indexOf(repo + "/v2/") === 0;
+                var base = v2 ? repo + "/v2/" : repo + "/";
+                fetch(base + "index.html").then(function (response) {
+                  return response.text();
+                }).then(function (html) {
+                  document.open();
+                  document.write(html);
+                  document.close();
+                });
+              })();
+            </script>
+          </head>
+          <body></body>
+          </html>
+          EOF
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/web/dist
+          path: site
       - id: deployment
         uses: actions/deploy-pages@v4

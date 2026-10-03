@@ -4,9 +4,8 @@ import { powerLabel } from "shared";
 
 const PACK_KWH = 6;
 
-export function CartDetail({ cart, onClose }: { cart: Cart; onClose: () => void }) {
+export function CartDetail({ cart, extra, onClose }: { cart: Cart; extra?: { nextTee: string; ready: string; spare: string }; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
-  const extra = extras(cart);
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -22,12 +21,11 @@ export function CartDetail({ cart, onClose }: { cart: Cart; onClose: () => void 
     ["Location", locationLine(cart)],
     ["Battery", `${cart.batteryPercent}%`],
     ["Energy", `${((cart.batteryPercent / 100) * PACK_KWH).toFixed(2)} kWh`],
-    ["Charger", powerLabel(cart)],
-    ["Updated", new Date(cart.lastUpdated).toLocaleTimeString()],
-    ["State of health", `${extra.soh}%`],
-    ["Charge cycles", `${extra.cycles}`],
-    ["Since last charge", extra.sinceCharge]
-  ];
+    ["Plug", powerLabel(cart)],
+    ["Next tee", extra?.nextTee ?? ""],
+    ["Readiness", extra?.ready ?? ""],
+    ["Spare", extra?.spare ?? ""]
+  ].filter(([, value]) => value);
 
   return (
     <div className="detail-backdrop" onClick={onClose}>
@@ -66,17 +64,6 @@ function statusLine(cart: Cart): string {
 function locationLine(cart: Cart): string {
   if (cart.status === "offline") return "Unknown";
   if (cart.hole) return `Hole ${cart.hole}`;
-  if (cart.powerConnected) return "Charging station";
-  return "On the course";
-}
-
-function extras(cart: Cart): { soh: number; cycles: number; sinceCharge: string } {
-  const n = Number(cart.id.replace(/\D/g, "")) || 1;
-  const soh = 88 + ((n * 7) % 11);
-  const cycles = 140 + n * 31;
-  if (cart.powerConnected) return { soh, cycles, sinceCharge: "On charger" };
-  const minutes = 25 + n * 18;
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  return { soh, cycles, sinceCharge: `${hours}:${rest.toString().padStart(2, "0")}` };
+  if (cart.powerConnected) return "Barn, plugged";
+  return "Barn, unplugged";
 }

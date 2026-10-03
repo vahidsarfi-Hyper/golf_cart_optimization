@@ -90,7 +90,7 @@ export function CourseMap({
             strokeWidth="0.6"
           />
           <text x={cart.position.x + 3} y={cart.position.y + 1.2} fontSize="3" fill="#1c2a1d">
-            {cart.label.replace("Cart ", "")}
+            {selectedId === cart.id || carts.length < 20 ? cart.label.replace("Cart ", "") : ""}
           </text>
         </g>
       ))}
@@ -114,6 +114,7 @@ export function CourseMap({
 
 function dotFill(cart: Cart): string {
   if (cart.status === "offline") return "#1c2a1d";
+  if (cart.status === "in_use") return "#3d6a8a";
   if (cart.powerConnected) return "#1f7a3a";
   return "#b42318";
 }
