@@ -15,18 +15,21 @@ export function TripsPage() {
       note={`Each round is ${ROUND_HOURS} hours at ${DRIVE_KW.toFixed(2)} kW. From 6:00 AM to 10:00 AM those rounds use ${(used / 100).toFixed(2)} kWh, which is the driving energy in the chart.`}
     >
       <p className="meta">{HISTORY_CAPTION}</p>
-      <SlotChart
-        labels={historySamples.map((sample) => sample.label)}
-        series={[{ name: "Drive kW", color: "#1a4f8b", values: historySamples.map((sample) => sample.driveKw) }]}
-        selected={selected}
-        onSelect={setSelected}
-      />
-      {point && (
-        <p className="readout">
-          {point.label} · {formatChargerKw(point.driveKw)} kW driving
-        </p>
-      )}
-      <div className="table-scroll">
+      <div className="curve-row">
+        <div>
+          <SlotChart
+            labels={historySamples.map((sample) => sample.label)}
+            series={[{ name: "Drive kW", color: "#1a4f8b", values: historySamples.map((sample) => sample.driveKw) }]}
+            selected={selected}
+            onSelect={setSelected}
+          />
+          {point && (
+            <p className="readout">
+              {point.label} · {formatChargerKw(point.driveKw)} kW driving
+            </p>
+          )}
+        </div>
+        <div className="table-scroll">
         <table className="slot-table">
           <thead>
             <tr>
@@ -59,6 +62,7 @@ export function TripsPage() {
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </PageFrame>
   );

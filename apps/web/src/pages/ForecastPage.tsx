@@ -32,16 +32,19 @@ export function ForecastPage({ kind }: { kind: Kind }) {
       <p className="meta">
         {FORECAST_CAPTION} · {forecastSamples.length} readings
       </p>
-      <SlotChart
-        labels={forecastSamples.map((sample) => sample.label)}
-        series={copy.series}
-        selected={selected}
-        onSelect={setSelected}
-        marks={kind === "capacity" ? forecastSamples.map((sample) => isUnderLow(sample.capacityKwh)) : undefined}
-        guide={kind === "capacity" ? { seriesIndex: 0, value: LOW_CAPACITY_KWH, label: `Low ${LOW_CAPACITY_KWH.toFixed(2)} kWh` } : undefined}
-      />
-      {point && <p className="readout">{copy.readout(point)}</p>}
-      <div className="table-scroll">
+      <div className="curve-row">
+        <div>
+          <SlotChart
+            labels={forecastSamples.map((sample) => sample.label)}
+            series={copy.series}
+            selected={selected}
+            onSelect={setSelected}
+            marks={kind === "capacity" ? forecastSamples.map((sample) => isUnderLow(sample.capacityKwh)) : undefined}
+            guide={kind === "capacity" ? { seriesIndex: 0, value: LOW_CAPACITY_KWH, label: `Low ${LOW_CAPACITY_KWH.toFixed(2)} kWh` } : undefined}
+          />
+          {point && <p className="readout">{copy.readout(point)}</p>}
+        </div>
+        <div className="table-scroll">
         <table className="slot-table">
           <thead>
             <tr>
@@ -65,6 +68,7 @@ export function ForecastPage({ kind }: { kind: Kind }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </PageFrame>
   );

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type { Cart } from "shared";
 import { isLowBattery, powerLabel } from "shared";
 import { filterCarts, type Filter } from "../cartView";
@@ -14,35 +15,49 @@ export function CartList({
   filter,
   onFilter,
   selectedId,
-  onSelect
+  onSelect,
+  showDetailsFor,
+  onShowDetails,
+  hideFilters
 }: {
   carts: Cart[];
   filter: Filter;
   onFilter: (filter: Filter) => void;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  showDetailsFor?: string | null;
+  onShowDetails?: () => void;
+  hideFilters?: boolean;
 }) {
   const visible = filterCarts(carts, filter);
 
+  useEffect(() => {
+    if (!selectedId) return;
+    document.querySelector(`[data-cart-row="${selectedId}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [selectedId]);
+
   return (
     <div>
-      <div className="filters">
-        {FILTERS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`tone-${item.id}${filter === item.id ? " active" : ""}`}
-            onClick={() => onFilter(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
+      {hideFilters ? null : (
+        <div className="filters">
+          {FILTERS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`tone-${item.id}${filter === item.id ? " active" : ""}`}
+              onClick={() => onFilter(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="list">
         {visible.length === 0 && <p className="meta">No carts in this filter.</p>}
         {visible.map((cart) => (
           <article
             key={cart.id}
+            data-cart-row={cart.id}
             className={`row ${selectedId === cart.id ? "selected" : ""} ${isLowBattery(cart) ? "low" : ""}`}
             onClick={() => onSelect(cart.id)}
           >
@@ -57,7 +72,21 @@ export function CartList({
               </div>
               <div className="meta">Updated {new Date(cart.lastUpdated).toLocaleTimeString()}</div>
             </div>
-            <div className={`power ${powerTone(cart)}`}>{powerLabel(cart)}</div>
+            <div className="power-cell">
+              <div className={`power ${powerTone(cart)}`}>{powerLabel(cart)}</div>
+              {showDetailsFor === cart.id && (
+                <button
+                  type="button"
+                  className="details-tag"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onShowDetails?.();
+                  }}
+                >
+                  Show Details
+                </button>
+              )}
+            </div>
           </article>
         ))}
       </div>

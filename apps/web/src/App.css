@@ -253,6 +253,59 @@ h3 {
   grid-template-columns: 1fr 1fr;
 }
 
+.fleet-stats .stat {
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.fleet-stats .stat.tone-all.active {
+  background: var(--green-deep);
+  color: white;
+  border-color: var(--green-deep);
+}
+
+.fleet-stats .stat.tone-charging {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.fleet-stats .stat.tone-charging.active {
+  background: var(--ok);
+  color: white;
+  border-color: var(--ok);
+}
+
+.fleet-stats .stat.tone-unplugged {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.fleet-stats .stat.tone-unplugged.active {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+
+.fleet-stats .stat.tone-offline {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.fleet-stats .stat.tone-offline.active {
+  background: var(--ink);
+  color: white;
+  border-color: var(--ink);
+}
+
+.fleet-stats .stat.active span,
+.fleet-stats .stat.tone-charging span,
+.fleet-stats .stat.tone-unplugged span,
+.fleet-stats .stat.tone-offline span {
+  color: inherit;
+}
+
 .stat,
 .panel {
   background: var(--panel);
@@ -276,6 +329,10 @@ h3 {
 
 .panel {
   padding: 1rem;
+}
+
+.map-stage {
+  position: relative;
 }
 
 .map {
@@ -418,6 +475,100 @@ h3 {
   background: var(--danger);
 }
 
+.power-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.details-tag {
+  border: 1px solid #1a3f73;
+  background: white;
+  color: #1a3f73;
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(28, 42, 29, 0.14);
+  white-space: nowrap;
+}
+
+.details-tag:hover,
+.details-tag:focus-visible {
+  background: #1a3f73;
+  color: white;
+}
+
+.map-tag {
+  position: absolute;
+  z-index: 3;
+  margin: 0;
+  transform: translateY(-50%);
+}
+
+.map-tag.flip {
+  transform: translate(-100%, -50%);
+}
+
+.detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(28, 42, 29, 0.45);
+}
+
+.detail-window {
+  width: min(420px, 100%);
+  background: white;
+  border-radius: 16px;
+  padding: 1rem 1.1rem 1.15rem;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.2);
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.detail-head h2 {
+  margin: 0;
+  font-size: 1.7rem;
+}
+
+.detail-close {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.1rem 0.35rem;
+}
+
+.detail-facts {
+  margin-top: 0.85rem;
+  background: #1a3f73;
+  color: white;
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+
+.detail-facts p {
+  margin: 0.42rem 0;
+  font-size: 0.95rem;
+}
+
+.detail-facts span {
+  font-weight: 650;
+}
+
 .power {
   font-size: 0.8rem;
   text-align: right;
@@ -456,9 +607,9 @@ h3 {
 }
 
 .gauge {
-  width: min(360px, 100%);
+  width: min(150px, 70%);
   display: block;
-  margin: 0.2rem auto 0.4rem;
+  margin: 0 auto 0.25rem;
 }
 
 .chart {
@@ -494,6 +645,50 @@ h3 {
   background: white;
   border: 1px solid var(--line);
   border-radius: 8px;
+}
+
+.curve-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  margin-top: 0.35rem;
+}
+
+.curve-pane .stats {
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+}
+
+.curve-pane .stat {
+  padding: 0.3rem 0.5rem;
+  border-radius: 8px;
+}
+
+.curve-pane .stat span {
+  font-size: 0.68rem;
+}
+
+.curve-pane .stat strong {
+  font-size: 0.92rem;
+}
+
+.curve-row:has(.curve-pane) {
+  align-items: stretch;
+}
+
+.curve-side {
+  position: relative;
+  min-height: 0;
+}
+
+@media (min-width: 1101px) {
+  .curve-side .table-scroll {
+    position: absolute;
+    inset: 0;
+    max-height: none;
+  }
 }
 
 .table-scroll {
@@ -545,11 +740,18 @@ h3 {
   font-weight: 600;
 }
 
+@media (max-width: 1100px) {
+  .curve-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 860px) {
   .dash,
   .energy-cols,
   .fleet-layout,
   .stats,
+  .curve-pane .stats,
   .row {
     grid-template-columns: 1fr;
   }

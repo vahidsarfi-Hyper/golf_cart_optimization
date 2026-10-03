@@ -1,17 +1,50 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import type { Cart } from "shared";
 
 export function CourseMap({
   carts,
   selectedId,
   onSelect,
-  className
+  className,
+  showDetails,
+  onShowDetails
 }: {
   carts: Cart[];
   selectedId: string | null;
   onSelect?: (id: string) => void;
   className?: string;
+  showDetails?: boolean;
+  onShowDetails?: () => void;
 }) {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [tip, setTip] = useState<{ x: number; y: number; flip: boolean } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!showDetails || !selectedId) {
+      setTip(null);
+      return;
+    }
+    const place = () => {
+      const stage = stageRef.current;
+      const mark = stage?.querySelector(`[data-cart-id="${selectedId}"]`);
+      if (!stage || !mark) return;
+      const stageBox = stage.getBoundingClientRect();
+      const dot = mark.getBoundingClientRect();
+      const centerX = dot.left + dot.width / 2 - stageBox.left;
+      const flip = centerX > stageBox.width * 0.62;
+      setTip({
+        x: flip ? dot.left - stageBox.left - 8 : dot.right - stageBox.left + 8,
+        y: dot.top + dot.height / 2 - stageBox.top,
+        flip
+      });
+    };
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, [showDetails, selectedId, carts]);
+
   return (
+    <div className="map-stage" ref={stageRef}>
     <svg
       className={className ? `map ${className}` : "map"}
       viewBox="0 0 100 100"
@@ -37,6 +70,7 @@ export function CourseMap({
       {carts.map((cart) => (
         <g
           key={cart.id}
+          data-cart-id={cart.id}
           className={onSelect ? "cart-dot live" : "cart-dot"}
           onClick={
             onSelect
@@ -61,6 +95,20 @@ export function CourseMap({
         </g>
       ))}
     </svg>
+      {showDetails && tip && (
+        <button
+          type="button"
+          className={`details-tag map-tag${tip.flip ? " flip" : ""}`}
+          style={{ left: tip.x, top: tip.y }}
+          onClick={(event) => {
+            event.stopPropagation();
+            onShowDetails?.();
+          }}
+        >
+          Show Details
+        </button>
+      )}
+    </div>
   );
 }
 

@@ -16,21 +16,24 @@ export function DemandPage() {
       note={`${drawing} carts are drawing charger power at 10:00 AM. A full pack that is still plugged in draws nothing. Each line is scaled to its own range. Cheap is under 12¢/kWh. Expensive is 22¢/kWh or more.`}
     >
       <p className="meta">{HISTORY_CAPTION}</p>
-      <SlotChart
-        labels={historySamples.map((sample) => sample.label)}
-        series={[
-          { name: "kW", color: "#1a4f8b", values: historySamples.map((sample) => sample.demandKw) },
-          { name: "¢/kWh", color: "#b45309", values: historySamples.map((sample) => sample.priceCents) }
-        ]}
-        selected={selected}
-        onSelect={setSelected}
-      />
-      {point && (
-        <p className="readout">
-          {point.label} · {formatChargerKw(point.demandKw)} kW · {point.priceCents}¢/kWh · {priceBand(point.priceCents)}
-        </p>
-      )}
-      <div className="table-scroll">
+      <div className="curve-row">
+        <div>
+          <SlotChart
+            labels={historySamples.map((sample) => sample.label)}
+            series={[
+              { name: "kW", color: "#1a4f8b", values: historySamples.map((sample) => sample.demandKw) },
+              { name: "¢/kWh", color: "#b45309", values: historySamples.map((sample) => sample.priceCents) }
+            ]}
+            selected={selected}
+            onSelect={setSelected}
+          />
+          {point && (
+            <p className="readout">
+              {point.label} · {formatChargerKw(point.demandKw)} kW · {point.priceCents}¢/kWh · {priceBand(point.priceCents)}
+            </p>
+          )}
+        </div>
+        <div className="table-scroll">
         <table className="slot-table">
           <thead>
             <tr>
@@ -56,6 +59,7 @@ export function DemandPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </PageFrame>
   );

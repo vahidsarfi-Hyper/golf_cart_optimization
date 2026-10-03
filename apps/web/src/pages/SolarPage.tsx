@@ -23,55 +23,61 @@ export function SolarPage() {
       note="Clear-sky output for a 100 kW plant. Energy since 6:00 AM holds each reading, except 10:00 AM, for 10 minutes."
     >
       <p className="meta">{HISTORY_CAPTION}</p>
-      <Gauge value={nowKw} max={PLANT_RATING_KW} />
-      <div className="stats">
-        <div className="stat">
-          <span>Panels producing</span>
-          <strong>
-            {PANELS_PRODUCING} / {PANELS_TOTAL}
-          </strong>
+      <div className="curve-row">
+        <div className="curve-pane">
+          <Gauge value={nowKw} max={PLANT_RATING_KW} />
+          <div className="stats">
+            <div className="stat">
+              <span>Panels producing</span>
+              <strong>
+                {PANELS_PRODUCING} / {PANELS_TOTAL}
+              </strong>
+            </div>
+            <div className="stat">
+              <span>Output at 10:00 AM</span>
+              <strong>{formatSolarKw(nowKw)} kW</strong>
+            </div>
+            <div className="stat">
+              <span>Energy since 6:00 AM</span>
+              <strong>{solarHistoryKwh.toFixed(2)} kWh</strong>
+            </div>
+            <div className="stat">
+              <span>Plant rating</span>
+              <strong>{PLANT_RATING_KW} kW</strong>
+            </div>
+          </div>
+          <SlotChart
+            labels={historySamples.map((sample) => sample.label)}
+            series={[{ name: "kW", color: "#1f7a3a", values: historySamples.map((sample) => sample.solarKw) }]}
+            selected={selected}
+            onSelect={setSelected}
+          />
+          {point && (
+            <p className="readout">
+              {point.label} · {formatSolarKw(point.solarKw)} kW
+            </p>
+          )}
         </div>
-        <div className="stat">
-          <span>Output at 10:00 AM</span>
-          <strong>{formatSolarKw(nowKw)} kW</strong>
+        <div className="curve-side">
+          <div className="table-scroll">
+            <table className="slot-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>kW</th>
+                </tr>
+              </thead>
+              <tbody>
+                {historySamples.map((sample, index) => (
+                  <tr key={sample.minute} className={index === selected ? "picked" : ""} onMouseEnter={() => setSelected(index)} onClick={() => setSelected(index)}>
+                    <td>{sample.label}</td>
+                    <td>{formatSolarKw(sample.solarKw)} kW</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div className="stat">
-          <span>Energy since 6:00 AM</span>
-          <strong>{solarHistoryKwh.toFixed(2)} kWh</strong>
-        </div>
-        <div className="stat">
-          <span>Plant rating</span>
-          <strong>{PLANT_RATING_KW} kW</strong>
-        </div>
-      </div>
-      <SlotChart
-        labels={historySamples.map((sample) => sample.label)}
-        series={[{ name: "kW", color: "#1f7a3a", values: historySamples.map((sample) => sample.solarKw) }]}
-        selected={selected}
-        onSelect={setSelected}
-      />
-      {point && (
-        <p className="readout">
-          {point.label} · {formatSolarKw(point.solarKw)} kW
-        </p>
-      )}
-      <div className="table-scroll">
-        <table className="slot-table">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>kW</th>
-            </tr>
-          </thead>
-          <tbody>
-            {historySamples.map((sample, index) => (
-              <tr key={sample.minute} className={index === selected ? "picked" : ""} onMouseEnter={() => setSelected(index)} onClick={() => setSelected(index)}>
-                <td>{sample.label}</td>
-                <td>{formatSolarKw(sample.solarKw)} kW</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </PageFrame>
   );
