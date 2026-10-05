@@ -7,7 +7,7 @@ type ValueResult = {
   year: number;
   typical: { name: string; dollars: number };
   high: { name: string; dollars: number };
-  months: { name: string; difference: number }[];
+  months: { name: string; before: number; after: number; difference: number }[];
   duration: number[];
   fleetKw: number;
   coverHours: number;
@@ -22,6 +22,21 @@ const TARIFFS = [
   ["fpl-gsd1", "FPL GSD-1"],
   ["fpl-gsdt1", "FPL GSDT-1"]
 ] as const;
+
+const TARIFF_NOTES: Record<(typeof TARIFFS)[number][0], string> = {
+  "pge-b19":
+    "Utility: Pacific Gas and Electric\nState: California\nB-19 secondary, effective March 1, 2026. It applies at 500–999 kW, and it is voluntary below 499 kW. Smaller sites use B-10.\nDemand, 15 minutes: anytime maximum $37.37/kW; summer peak 4–9 PM every day $46.16/kW; winter peak 4–9 PM $2.31/kW. The summer part-peak price is known, but the hours are not in the extract, so that window is omitted.\nEnergy: 18.6¢/kWh on the summer peak, 16.2¢/kWh on the March–May peak, 6.4¢/kWh from 9 AM to 2 PM in March–May, and 12¢/kWh otherwise.\nThe customer charge is billed as zero because it is not in the extract.",
+  "sce-gs3":
+    "Utility: Southern California Edison\nState: California\nTOU-GS-3 covers 200–500 kW. TOU-GS-2 is the schedule below that, from 20–200 kW.\nDemand, 15 minutes: facilities-related $22.02/kW in any hour, plus summer on-peak $17.79/kW on weekdays from 4–9 PM.\nEnergy charges are omitted because they are not in the extract. The customer charge is billed as zero for the same reason.",
+  "heco-j":
+    "Utility: Hawaiian Electric\nState: Hawaii (Oahu)\nSchedule J, effective October 2026, is for accounts above 25 kW or 5,000 kWh. Schedule P is the larger schedule: 300 kW and up on Oahu, 200 kW on Maui and Hawaii Island.\nDemand: $15.72/kW on the highest 15-minute interval. The real schedule also averages that peak over 11 months. This model bills one month, so that ratchet is not applied.\nEnergy: 38.8¢/kWh all hours. The customer charge is billed as zero because it is not in the extract.",
+  "coned-sc9":
+    "Utility: Consolidated Edison\nState: New York (New York City and Westchester)\nThese are Con Edison's published large-business time-of-day delivery rates. SC 9 applies above 10 kW, and Rate III is the time-of-day rate from 10–1,500 kW. A golf-course SC 9 bill can differ from this example.\nDemand, modeled as 15 minutes until Con Edison's interval is confirmed: summer weekdays 8 AM–6 PM $12.75/kW; summer weekdays 8 AM–10 PM $28.64/kW; summer all hours $27.33/kW; other months weekdays 8 AM–10 PM $18.15/kW; other months all hours $7.04/kW.\nEnergy charges are omitted because the extract gives demand only. The customer charge is billed as zero.",
+  "fpl-gsd1":
+    "Utility: Florida Power & Light\nState: Florida\nGSD-1, September 2026 rates, is for 25–499 kW. Duke Energy Florida and TECO serve other parts of the state.\nDemand: one maximum of $12.70/kW, any hour. The interval is modeled as 15 minutes until FPL's interval is confirmed.\nEnergy: 2.8¢/kWh base. Fuel and other clauses are not in that figure. The customer charge is billed as zero.",
+  "fpl-gsdt1":
+    "Utility: Florida Power & Light\nState: Florida\nGSDT-1 is the optional time-of-use version of GSD-1, September 2026 rates, for 25–499 kW.\nDemand: maximum $0.79/kW any hour, plus on-peak $11.90/kW. On-peak is weekdays noon–9 PM in April–October, and weekdays 6–10 AM and 6–10 PM in November–March. Night charging barely touches the demand charge.\nEnergy: 6¢/kWh on-peak and 1.5¢/kWh otherwise, before fuel and other clauses. The interval is modeled as 15 minutes until FPL's interval is confirmed."
+};
 
 export function ValuePage() {
   const { meter } = useDay();
@@ -120,6 +135,7 @@ export function ValuePage() {
             </select>
           </label>
         </div>
+        <p className="tariff-note">{TARIFF_NOTES[tariff as keyof typeof TARIFF_NOTES]}</p>
       </header>
       {error ? <p className="lede">{error}</p> : null}
       {busy && !result ? <p className="lede">Pricing the year…</p> : null}
@@ -148,30 +164,38 @@ export function ValuePage() {
               </div>
             ))}
           </div>
-          <h2>Where the kilowatts are</h2>
-          <p className="meta">
-            Unmanaged site import, ranked from the highest interval. The fleet can cover about {result.fleetKw} kW for {result.coverHours} hours ({result.usableKwh} kWh usable). The mark is that power. Value sits in the short peaks above it.
-          </p>
-          <Duration values={result.duration} mark={result.fleetKw} />
-          <details>
-            <summary>Monthly bills</summary>
-            <table className="bill-table">
-              <thead>
-                <tr>
-                  <th>Month</th>
-                  <th>Difference</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.months.map((month) => (
-                  <tr key={month.name}>
-                    <td>{month.name}</td>
-                    <td>{usd(month.difference)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </details>
+          <div className="value-split">
+            <section>
+              <h2>Where the kilowatts are</h2>
+              <p className="meta">
+                Unmanaged site import, ranked from the highest interval. The fleet can cover about {result.fleetKw} kW for {result.coverHours} hours ({result.usableKwh} kWh usable). The mark is that power. Value sits in the short peaks above it.
+              </p>
+              <Duration values={result.duration} mark={result.fleetKw} />
+            </section>
+            <section>
+              <h2>Monthly bills</h2>
+              <table className="bill-table">
+                  <thead>
+                    <tr>
+                      <th>Month</th>
+                      <th>Before saving</th>
+                      <th>After saving</th>
+                      <th>Difference</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.months.map((month) => (
+                      <tr key={month.name}>
+                        <td>{month.name}</td>
+                        <td>{usd(month.before)}</td>
+                        <td>{usd(month.after)}</td>
+                        <td>{usd(month.difference)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+            </section>
+          </div>
         </>
       ) : null}
       <div className="choice-row">

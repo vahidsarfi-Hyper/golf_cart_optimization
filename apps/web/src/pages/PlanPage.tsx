@@ -5,13 +5,13 @@ import { useDay } from "../day";
 import { sendNext, teeLabel, usd } from "../model";
 
 export function PlanPage() {
-  const { day, error, policy, step, setStep, meterBlind, setMeterBlind, linkLoss, setLinkLoss, priorityRule } = useDay();
+  const { day, error, policy, step, setStep, meter, meterBlind, setMeterBlind, linkLoss, setLinkLoss, priorityRule } = useDay();
   const [cartId, setCartId] = useState<string | null>(null);
   if (error) return <p className="lede">{error}</p>;
   if (!day) return <p className="lede">Loading the plan…</p>;
   const now = day.steps[step].plan;
-  const next = sendNext(day, policy, step, priorityRule);
-  const cart = day.carts.find((item) => item.id === (cartId ?? next[0]?.id));
+  const next = sendNext(day, policy, step, priorityRule, ["c22"]);
+  const cart = day.carts.find((item) => item.id === (cartId ?? (linkLoss ? "c22" : next[0]?.id)));
   const before = day.bills.unmanaged.totalDollars;
   const after = day.bills.plan.totalDollars;
 
@@ -23,10 +23,24 @@ export function PlanPage() {
           <p className="lede">{day.solver}</p>
         </div>
         <div className="choice-row">
+          <span className={`meter-toggle locked${meter === "pump" ? " on" : ""}`}>
+            Separate pump meter
+            <span className="meter-toggle-track" aria-hidden="true">
+              <span className="meter-toggle-knob" />
+            </span>
+          </span>
+          <span className="choice locked on">{priorityRule ? "Priority rule" : "Optimizer order"}</span>
           <button type="button" className={`choice${meterBlind ? " on" : ""}`} onClick={() => setMeterBlind(!meterBlind)}>
             Meter feed lost
           </button>
-          <button type="button" className={`choice${linkLoss ? " on" : ""}`} onClick={() => setLinkLoss(!linkLoss)}>
+          <button
+            type="button"
+            className={`choice${linkLoss ? " on" : ""}`}
+            onClick={() => {
+              setLinkLoss(!linkLoss);
+              setCartId("c22");
+            }}
+          >
             Cart 22 link lost
           </button>
         </div>
@@ -53,11 +67,11 @@ export function PlanPage() {
       <h2>Send this cart next</h2>
       <ol className="send-list wide">
         {next.map((row) => (
-          <li key={row.id} className={row.short ? "short" : ""}>
+          <li key={row.id} className={`${row.short ? "short" : ""} ${cart?.id === row.id ? "picked" : ""}`}>
             <button type="button" onClick={() => setCartId(row.id)}>
               <strong>{row.label}</strong>
               <span>
-                {row.percent}% · {row.tee} · {row.short ? "short for the round" : row.spare}
+                {row.percent}% · {row.tee} · {row.id === "c22" && linkLoss ? "link lost" : row.short ? "short for the round" : row.spare}
               </span>
             </button>
           </li>

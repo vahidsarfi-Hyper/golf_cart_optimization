@@ -152,7 +152,7 @@ function buildShape(date: string, scale = { club: 1, solar: 1, rounds: 1 }): Day
     for (let k = 0; k < 3 && cursor < pool.length; k += 1) indexes.push(pool[cursor++]);
     if (minute === 10 * 60 + 30) {
       const short = carts.findIndex((cart) => cart.id === "c70");
-      if (indexes.length > 0 && short >= 0) indexes[0] = short;
+      if (short >= 0 && !indexes.includes(short)) indexes.unshift(short);
     }
     waves.push({ minute, cartIndexes: indexes });
   }
@@ -571,7 +571,7 @@ export function valueYear(tariffId: string, meter: MeterTopology, powerKw: numbe
     year,
     typical: { name: typical.name, dollars: typical.difference },
     high: { name: high.name, dollars: high.difference },
-    months: months.map(({ name, difference }) => ({ name, difference })),
+    months: months.map(({ name, before, after, difference }) => ({ name, before, after, difference })),
     duration,
     fleetKw,
     coverHours: round1(usableKwh / fleetKw),

@@ -746,6 +746,12 @@ h3 {
   }
 }
 
+@media (max-width: 700px) {
+  .value-split {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 860px) {
   .dash,
   .energy-cols,
@@ -813,6 +819,20 @@ h3 {
   align-items: center;
 }
 
+.tariff-note {
+  flex: 1 0 100%;
+  width: 100%;
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+}
+
 .choice {
   border: 1px solid var(--line);
   background: var(--panel);
@@ -826,6 +846,80 @@ h3 {
   background: var(--green-deep);
   color: white;
   border-color: var(--green-deep);
+}
+
+.meter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.22rem 0.35rem 0.22rem 0.75rem;
+  cursor: pointer;
+}
+
+.meter-toggle.on {
+  background: var(--green-deep);
+  color: white;
+  border-color: var(--green-deep);
+}
+
+.meter-toggle-track {
+  position: relative;
+  width: 2.05rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: #c5d0c2;
+  flex: none;
+}
+
+.meter-toggle.on .meter-toggle-track {
+  background: #8fbf96;
+}
+
+.meter-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.15rem - 4px);
+  height: calc(1.15rem - 4px);
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.15s ease;
+}
+
+.meter-toggle.on .meter-toggle-knob {
+  transform: translateX(0.9rem);
+}
+
+.meter-toggle.locked,
+.choice.locked {
+  cursor: default;
+  pointer-events: none;
+  color: #6d756e;
+  background: #e6eae4;
+  border-color: #c5cdc4;
+}
+
+.meter-toggle.locked.on,
+.choice.locked.on {
+  color: #5c6560;
+  background: #d5dbd4;
+  border-color: #b7c0b6;
+}
+
+.meter-toggle.locked .meter-toggle-track {
+  background: #c5d0c2;
+}
+
+.meter-toggle.locked.on .meter-toggle-track {
+  background: var(--green);
+}
+
+.meter-toggle.locked .meter-toggle-knob {
+  background: white;
 }
 
 .choice select,
@@ -934,6 +1028,10 @@ h3 {
   border-color: var(--danger);
 }
 
+.send-list li.picked button {
+  border-color: var(--green-deep);
+}
+
 .send-list strong,
 .send-list span {
   display: block;
@@ -942,6 +1040,18 @@ h3 {
 .fleet-scroll {
   max-height: 420px;
   overflow: auto;
+}
+
+.value-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 1.15fr);
+  gap: 1.25rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.value-split .meta {
+  margin-top: 0;
 }
 
 .month-bars {

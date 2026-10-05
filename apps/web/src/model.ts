@@ -94,7 +94,7 @@ export function teeLabel(minute: number | null): string {
   return `${hour}:${m.toString().padStart(2, "0")} ${suffix}`;
 }
 
-export function sendNext(day: DayPayload, policy: Policy, step: number, priorityRule: boolean) {
+export function sendNext(day: DayPayload, policy: Policy, step: number, priorityRule: boolean, includeIds: string[] = []) {
   const minute = day.steps[step]?.minute ?? 0;
   const rows = day.carts
     .map((cart) => {
@@ -119,5 +119,11 @@ export function sendNext(day: DayPayload, policy: Policy, step: number, priority
       return cart[policy].onRound[step] !== 1 && !cart.offline;
     });
   rows.sort((a, b) => (priorityRule ? b.percent - a.percent : b.shortfall - a.shortfall || a.teeMinute - b.teeMinute));
-  return rows.slice(0, 5);
+  const shown = rows.slice(0, 5);
+  for (const id of includeIds) {
+    if (shown.some((row) => row.id === id)) continue;
+    const extra = rows.find((row) => row.id === id);
+    if (extra) shown.push(extra);
+  }
+  return shown;
 }

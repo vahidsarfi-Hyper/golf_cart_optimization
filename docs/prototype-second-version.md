@@ -141,7 +141,7 @@ Check the browser after every step that changes a page. Click through Today, Fle
 4. Shade golf waves on the time axis so an afternoon peak sitting on play is visible.
 5. Put price in a band under the chart, not on a second axis.
 6. Above the chart, show three readouts: carts ready for the next wave, usable kilowatt-hours above the energy those rounds need, and net charge or discharge right now.
-7. Add the meter toggle. Switching it must change the chart and the bill card together. On one meter, the pump spike is on the chart. On a separate pump meter, it is gone from the cart bill and the chart should say so.
+7. Add one meter control named Separate pump meter. On means the pumps are on their own meter. Off means one site meter, so the pumps share the cart meter. The name stays Separate pump meter in both positions. Switching it must change the chart and the bill card together. Off, the pump spike is on the chart. On, it is gone from the cart bill and the chart says so.
 8. Add a tariff chip and a bill card: one row per demand window, with month-to-date peak, target, and dollars if the target is missed. Energy cost sits under those rows.
 9. Add "show readings" for the raw 15-minute table. It is closed by default.
 10. Scrubbing the time marker updates the readouts, the carts-on-course count, and the bill so far. Wire the marker once Fleet and the bill calculator exist. Until then, show the marker at the demo time and finish the scrub check in [8-Fleet screen](#8-fleet-screen).
@@ -185,10 +185,12 @@ Check the browser after every step that changes a page. Click through Today, Fle
 2. Objective: energy cost, demand above the peak target, wear per kilowatt-hour discharged, and a penalty for missing readiness. Subtract demand-response revenue only when an event is present in the mock. Export price is zero on this version.
 3. The peak target comes from a simple billing-cycle rule until the nightly planner exists: it never sits below the month-to-date peak, and it does not try to flatten day 1 of the month down to zero.
 4. Split the next 15 minutes of fleet power across carts. Discharge carts with the most energy above their next round and the longest wait. Charge carts with the soonest tee time first. Spread discharge so one cart does not take all the wear.
-5. If a cart has no link, the command for that cart is charge-only up to the readiness level. If the meter feed is missing, discharge is zero. The mock can toggle these so the screen can show them.
+5. If a cart has no link, the command for that cart is charge-only up to the readiness level, taken in the earliest open slots before its tee. If the meter feed is missing, discharge is zero. Plan can toggle both. Use Cart 22 for the lost link. Add the short cart, Cart 70, onto the 10:30 wave without removing Cart 22, so Cart 22 keeps a tee time and stays on the send-next list either way. Turning the link off and on changes that cart's command, not whether the cart appears.
 6. Replace the placeholder plan in the simulator with this result.
 7. Add `/plan`. Put it in the top bar. Remove any leftover oval.
 8. Plan shows, from top to bottom:
+   - The Separate pump meter control from Today, and the send-order from Fleet. Show which one is selected. Do not let Plan change them. Draw both in gray so they read as status. Keep the meter switch green when separate pump meter is on.
+   - Meter feed lost and Cart 22 link lost, which Plan does change.
    - Bill before and after, using the unmanaged run and this plan.
    - The same site chart as Today, with both import curves and the peak target.
    - The next 15 minutes only: fleet kilowatts, and which limit is binding. The limits are readiness, import cap, peak target, and wear.
@@ -204,9 +206,9 @@ Check the browser after every step that changes a page. Click through Today, Fle
 
 1. Extend the model with a binary assignment of carts to rounds, the energy balance per cart, and the readiness constraint at each tee time. Keep charge and discharge continuous. A simultaneous charge and discharge binary is unnecessary while export is unpaid and wear is in the objective.
 2. Solve on a time limit, warm-started from the previous solution, so a 15-minute cycle can finish. Record the solver choice in the API notes. Hosting is still an open question in the strategy.
-3. On Fleet and on Plan, show the send-next list as five rows in large type: cart, percent, next tee, spare energy above the round. The order is the optimizer's order.
-4. If the tee sheet is marked unavailable in the mock, fall back to v0 and label the list as a priority rule.
-5. In the browser, mark one cart short, confirm it rises on the charge list, and confirm a full cart with a late tee is preferred for discharge.
+3. On Fleet, show the send-next list as five rows: cart, percent, next tee, spare energy above the round. A control on Fleet switches the order, and Plan shows the same choice without letting it change. Optimizer order ranks by who is shortest for the next round, then by the soonest tee. Priority rule ranks by battery percent, fullest first.
+4. Keep the tee sheet fixed, so this switch does not change charge, discharge, or the bill. Which cart goes out would change the money only while that assignment is still open: a wave that needs fewer carts than are ready, several carts short with little time left, or a peak before the next tee. Until assignment is solved, the two orders are a preview of that choice.
+5. In the browser, switch the order and confirm the five carts change while the Plan dollar figures stay put. Turn Cart 22 link lost on and off and confirm that cart stays on the list and its early slots change between charge and hold.
 
 ## 12-Value screen
 
@@ -216,16 +218,20 @@ Check the browser after every step that changes a page. Click through Today, Fle
 
 1. Add `/value` to the bar.
 2. Ship one sample year of 15-minute site load so the page works with no upload. Then accept an upload of the same shape.
-3. The user picks a tariff and a power per cart: 1.5, 3, or 6 kW.
+3. The user picks a tariff and a power per cart: 1.5, 3, or 6 kW. Under the tariff and power controls, show a note across the full width of the page. Name the utility and the state, then the demand windows, energy prices, and omissions this model actually bills. The note changes with the tariff.
 4. Run the month simulator for each month of the year under unmanaged charging and under the plan. Sum the bill difference. Show a typical month and a high month beside the year total.
 5. Draw the load-duration curve of the sample year. Mark the slice of the peak the fleet can cover given its usable energy and the chosen power. The chart's job is to show that value sits in the short tall peaks.
-6. A table of twelve monthly bills stays behind the year number, closed until asked.
-7. In the browser, switch tariff and power level and confirm the year total and the curve both change. Upload a second file and confirm the sample year is replaced.
+6. Beside that curve, show the twelve monthly bills open. Columns are month, before saving, after saving, and difference. Before saving is the unmanaged bill. After saving is the plan bill plus wear. Difference is before saving minus after saving. The demand charge in this table uses a target of zero, so it is the whole peak for the month.
+7. In the browser, switch tariff and power level and confirm the year total, the note, and the curve all change. On a wide window the curve and the monthly table sit side by side. On a narrow window they stack, curve first. Upload a second file and confirm the sample year is replaced.
 
 ## 13-Checks before this version is done
 
 - Today, Fleet, Plan, and Value are the only items in the bar. Old energy routes redirect.
-- The meter toggle and the unmanaged or planned control agree on Today and on Plan.
+- Today has one meter control, Separate pump meter. On is a separate pump meter. Off is one site meter. Plan shows that state and the Fleet send-order in gray, and does not change them. The meter switch stays green when it is on.
+- The unmanaged or planned choice on Today agrees with the cart commands Plan shows for that choice.
+- Switching optimizer order and priority rule changes the send-next list and leaves the dollar figures unchanged.
+- Cart 22 stays on the send-next list. Losing its link changes that cart's command.
+- Value shows the duration curve and the monthly bills side by side. The table names before saving, after saving, and the difference. The tariff note names the utility and the state and spans the page.
 - A cart on a round never receives a charge or discharge command.
 - The bill card names demand windows and uses the calculator, not a hand-written dollar figure in the page.
 - Send-next on Plan matches the cart detail on Fleet.

@@ -22,11 +22,16 @@ export function TodayPage() {
           </p>
         </div>
         <div className="choice-row">
-          <button type="button" className={`choice${meter === "one" ? " on" : ""}`} onClick={() => setMeter("one")}>
-            One site meter
-          </button>
-          <button type="button" className={`choice${meter === "pump" ? " on" : ""}`} onClick={() => setMeter("pump")}>
+          <button
+            type="button"
+            className={`meter-toggle${meter === "pump" ? " on" : ""}`}
+            aria-pressed={meter === "pump"}
+            onClick={() => setMeter(meter === "pump" ? "one" : "pump")}
+          >
             Separate pump meter
+            <span className="meter-toggle-track" aria-hidden="true">
+              <span className="meter-toggle-knob" />
+            </span>
           </button>
           <button type="button" className={`choice${policy === "unmanaged" ? " on" : ""}`} onClick={() => setPolicy("unmanaged")}>
             Unmanaged
