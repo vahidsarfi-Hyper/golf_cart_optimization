@@ -6,7 +6,7 @@ import { sendNext, teeLabel, type DayPayload, type Policy } from "../model";
 import { useState } from "react";
 
 export function FleetPage() {
-  const { day, error, policy, step, priorityRule, setPriorityRule } = useDay();
+  const { day, error, policy, step, setStep, priorityRule, setPriorityRule } = useDay();
   const [filter, setFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -41,6 +41,10 @@ export function FleetPage() {
         <p className="lede">
           {day.steps[step].label}. Select a cart on the map or in the list. {day.steps[step][policy].onCourse} are on a round.
         </p>
+        <label className="clock">
+          Clock {day.steps[step].label}
+          <input type="range" min={0} max={day.steps.length - 1} value={step} onChange={(event) => setStep(Number(event.target.value))} />
+        </label>
         <CourseMap carts={carts} selectedId={selectedId} onSelect={setSelectedId} className="large" showDetails={Boolean(selectedId)} onShowDetails={() => setOpen(true)} />
       </section>
       <section className="panel">

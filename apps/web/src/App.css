@@ -981,6 +981,10 @@ h3 {
   margin: 0.8rem 0 1rem;
 }
 
+.map-panel .clock {
+  margin-top: 0;
+}
+
 .bill-table {
   width: 100%;
   border-collapse: collapse;
