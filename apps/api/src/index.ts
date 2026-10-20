@@ -18,11 +18,11 @@ function powerOf(value: unknown): number {
   return power === 1.5 || power === 6 ? power : 3;
 }
 
-function dayFor(meter: MeterTopology, powerKw: number, linkLoss: string, meterBlind: boolean): DayPayload {
-  const key = `${meter}|${powerKw}|${linkLoss}|${meterBlind}`;
+function dayFor(meter: MeterTopology, powerKw: number, linkLoss: string, meterBlind: boolean, onlyCharging: boolean): DayPayload {
+  const key = `${meter}|${powerKw}|${linkLoss}|${meterBlind}|${onlyCharging}`;
   const cached = dayCache.get(key);
   if (cached) return cached;
-  const day = buildDay(meter, powerKw, linkLoss, meterBlind);
+  const day = buildDay(meter, powerKw, linkLoss, meterBlind, onlyCharging);
   dayCache.set(key, day);
   return day;
 }
@@ -66,11 +66,12 @@ app.get("/api/day", (req, res) => {
   const powerKw = powerOf(req.query.powerKw);
   const linkLoss = typeof req.query.linkLoss === "string" ? req.query.linkLoss : "";
   const meterBlind = req.query.meterBlind === "1";
-  res.json(dayFor(meter, powerKw, linkLoss, meterBlind));
+  const onlyCharging = req.query.onlyCharging === "1";
+  res.json(dayFor(meter, powerKw, linkLoss, meterBlind, onlyCharging));
 });
 
 app.get("/api/carts", (req, res) => {
-  const day = dayFor(meterOf(req.query.meter), powerOf(req.query.powerKw), "", false);
+  const day = dayFor(meterOf(req.query.meter), powerOf(req.query.powerKw), "", false, false);
   res.json({ carts: cartsAtTen(day), clock: minuteLabel(10 * 60) });
 });
 
@@ -78,10 +79,11 @@ app.get("/api/value", (req, res) => {
   const meter = meterOf(req.query.meter);
   const powerKw = powerOf(req.query.powerKw);
   const tariff = typeof req.query.tariff === "string" ? req.query.tariff : "pge-b19";
-  const key = `${tariff}|${meter}|${powerKw}`;
+  const onlyCharging = req.query.onlyCharging === "1";
+  const key = `${tariff}|${meter}|${powerKw}|${onlyCharging}`;
   try {
     const cached = valueCache.get(key);
-    const value = cached ?? valueYear(tariff, meter, powerKw);
+    const value = cached ?? valueYear(tariff, meter, powerKw, undefined, onlyCharging);
     valueCache.set(key, value);
     res.json(value);
   } catch (error) {

@@ -3,7 +3,7 @@ import { useDay } from "../day";
 import { usd } from "../model";
 
 export function TodayPage() {
-  const { day, error, offline, meter, setMeter, policy, setPolicy, step, setStep } = useDay();
+  const { day, error, offline, meter, setMeter, policy, setPolicy, step, setStep, onlyCharging, setOnlyCharging } = useDay();
   if (error) return <p className="lede">{error}</p>;
   if (!day) return <p className="lede">Loading the day…</p>;
   const now = day.steps[step];
@@ -33,11 +33,27 @@ export function TodayPage() {
               <span className="meter-toggle-knob" />
             </span>
           </button>
-          <button type="button" className={`choice${policy === "unmanaged" ? " on" : ""}`} onClick={() => setPolicy("unmanaged")}>
-            Unmanaged
+          <button
+            type="button"
+            className={`meter-toggle${onlyCharging ? " on" : ""}`}
+            aria-pressed={onlyCharging}
+            onClick={() => setOnlyCharging(!onlyCharging)}
+          >
+            Only Charging
+            <span className="meter-toggle-track" aria-hidden="true">
+              <span className="meter-toggle-knob" />
+            </span>
           </button>
-          <button type="button" className={`choice${policy === "plan" ? " on" : ""}`} onClick={() => setPolicy("plan")}>
-            Plan
+          <button
+            type="button"
+            className={`meter-toggle${policy === "plan" ? " on" : ""}`}
+            aria-pressed={policy === "plan"}
+            onClick={() => setPolicy(policy === "plan" ? "unmanaged" : "plan")}
+          >
+            Optimization plan
+            <span className="meter-toggle-track" aria-hidden="true">
+              <span className="meter-toggle-knob" />
+            </span>
           </button>
         </div>
       </header>

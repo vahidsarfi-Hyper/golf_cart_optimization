@@ -5,7 +5,7 @@ import { useDay } from "../day";
 import { sendNext, teeLabel, usd } from "../model";
 
 export function PlanPage() {
-  const { day, error, policy, step, setStep, meter, meterBlind, setMeterBlind, linkLoss, setLinkLoss, priorityRule } = useDay();
+  const { day, error, policy, step, setStep, meter, setMeter, meterBlind, setMeterBlind, linkLoss, setLinkLoss, onlyCharging, setOnlyCharging, priorityRule, setPriorityRule } = useDay();
   const [cartId, setCartId] = useState<string | null>(null);
   if (error) return <p className="lede">{error}</p>;
   if (!day) return <p className="lede">Loading the plan…</p>;
@@ -23,13 +23,39 @@ export function PlanPage() {
           <p className="lede">{day.solver}</p>
         </div>
         <div className="choice-row">
-          <span className={`meter-toggle locked${meter === "pump" ? " on" : ""}`}>
+          <button
+            type="button"
+            className={`meter-toggle${meter === "pump" ? " on" : ""}`}
+            aria-pressed={meter === "pump"}
+            onClick={() => setMeter(meter === "pump" ? "one" : "pump")}
+          >
             Separate pump meter
             <span className="meter-toggle-track" aria-hidden="true">
               <span className="meter-toggle-knob" />
             </span>
-          </span>
-          <span className="choice locked on">{priorityRule ? "Priority rule" : "Optimizer order"}</span>
+          </button>
+          <button
+            type="button"
+            className={`meter-toggle${onlyCharging ? " on" : ""}`}
+            aria-pressed={onlyCharging}
+            onClick={() => setOnlyCharging(!onlyCharging)}
+          >
+            Only Charging
+            <span className="meter-toggle-track" aria-hidden="true">
+              <span className="meter-toggle-knob" />
+            </span>
+          </button>
+          <button
+            type="button"
+            className={`meter-toggle${priorityRule ? " on" : ""}`}
+            aria-pressed={priorityRule}
+            onClick={() => setPriorityRule(!priorityRule)}
+          >
+            Priority rule
+            <span className="meter-toggle-track" aria-hidden="true">
+              <span className="meter-toggle-knob" />
+            </span>
+          </button>
           <button type="button" className={`choice${meterBlind ? " on" : ""}`} onClick={() => setMeterBlind(!meterBlind)}>
             Meter feed lost
           </button>

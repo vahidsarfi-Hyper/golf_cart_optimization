@@ -268,7 +268,8 @@ function runForward(
   tariffId: string,
   mode: "unmanaged" | "plan",
   linkLoss: string,
-  meterBlind: boolean
+  meterBlind: boolean,
+  onlyCharging = false
 ): { runtime: Runtime; sides: StepSide[] } {
   const plan = mode === "plan" ? dispatchPlan(shape, meter, powerKw, targets, tariffId, linkLoss) : null;
   const runtime = emptyRuntime(shape.carts.length);
@@ -311,7 +312,7 @@ function runForward(
         chargeSum += used;
       }
     }
-    if (mode === "plan" && !meterBlind) {
+    if (mode === "plan" && !meterBlind && !onlyCharging) {
       const cap = capFor(minute, targets, tariffId, shape.month, shape.weekday);
       let over = base + chargeSum - cap;
       if (over > 0.2) {
@@ -336,7 +337,7 @@ function runForward(
     let importKw = base + chargeSum - dischargeSum;
     if (importKw < 0) importKw = 0;
     for (let index = 0; index < shape.carts.length; index += 1) runtime.soc[index][step] = round2(soc[index]);
-    sides.push(summarize(shape, runtime, step, chargeSum, dischargeSum, round1(importKw), onCourseIndexes.length, mode));
+    sides.push(summarize(shape, runtime, step, chargeSum, dischargeSum, round1(importKw), onCourseIndexes.length, mode, onlyCharging));
   }
   return { runtime, sides };
 }
@@ -354,7 +355,7 @@ function spareKwh(shape: DayShape, index: number, minute: number, soc: number, d
   return Math.max(0, soc - reserve);
 }
 
-function summarize(shape: DayShape, runtime: Runtime, step: number, chargeSum: number, dischargeSum: number, importKw: number, onCourse: number, mode: "unmanaged" | "plan"): StepSide {
+function summarize(shape: DayShape, runtime: Runtime, step: number, chargeSum: number, dischargeSum: number, importKw: number, onCourse: number, mode: "unmanaged" | "plan", onlyCharging = false): StepSide {
   const minute = step * 15;
   let ready = 0;
   let short = 0;
@@ -373,7 +374,7 @@ function summarize(shape: DayShape, runtime: Runtime, step: number, chargeSum: n
   }
   const net = round1(chargeSum - dischargeSum);
   let binding = "none";
-  let intent = mode === "unmanaged" ? "Plugged carts charge at full power until they are full." : "Holding the carts for their tee times.";
+  let intent = mode === "unmanaged" ? "Plugged carts charge at full power until they are full." : onlyCharging ? "Charging only in the cheaper hours. Discharge is off." : "Holding the carts for their tee times.";
   if (mode === "plan" && dischargeSum > 1) {
     binding = "peak target";
     intent = minute >= 16 * 60 && minute < 21 * 60 ? "Discharging through the evening window to hold the peak target." : "Discharging through the pump spike so this interval stays on the target.";
@@ -405,11 +406,11 @@ const DEMO_TARGETS: PeakTarget[] = [
   { windowId: "summer-peak", monthToDateKw: 190, targetKw: 210 }
 ];
 
-export function buildDay(meter: MeterTopology, powerKw: number, linkLoss = "", meterBlind = false): DayPayload {
+export function buildDay(meter: MeterTopology, powerKw: number, linkLoss = "", meterBlind = false, onlyCharging = false): DayPayload {
   const shape = buildShape(DEMO_DATE);
   const tariff = tariffById("pge-b19");
   const unmanaged = runForward(shape, meter, powerKw, DEMO_TARGETS, "pge-b19", "unmanaged", "", false);
-  const plan = runForward(shape, meter, powerKw, DEMO_TARGETS, "pge-b19", "plan", linkLoss, meterBlind);
+  const plan = runForward(shape, meter, powerKw, DEMO_TARGETS, "pge-b19", "plan", linkLoss, meterBlind, onlyCharging);
   const points = (sides: StepSide[]): BillPoint[] =>
     sides.map((side, step) => ({
       date: shape.date,
@@ -433,8 +434,14 @@ export function buildDay(meter: MeterTopology, powerKw: number, linkLoss = "", m
     fixedNote: tariff.fixedNote,
     meter,
     powerKw,
-    solver: "look-ahead dispatch, then spare-energy discharge. Assignment is the fixed tee sheet. HiGHS is not bundled.",
-    notes: WORKING_NOTES,
+    solver: onlyCharging
+      ? "look-ahead dispatch that charges in the cheaper hours under the peak target. Only Charging is on, so the plan does not discharge. Assignment is the fixed tee sheet. HiGHS is not bundled."
+      : "look-ahead dispatch, then spare-energy discharge. Assignment is the fixed tee sheet. HiGHS is not bundled.",
+    notes: WORKING_NOTES.map((note) =>
+      onlyCharging && note.startsWith("The plan is")
+        ? "The plan is a look-ahead dispatcher: charge in the cheapest hours that stay under the peak target. Only Charging is on, so the plan does not discharge. HiGHS is not bundled."
+        : note
+    ),
     targets: tariff.windows
       .filter((window) => DEMO_TARGETS.some((target) => target.windowId === window.id))
       .map((window) => {
@@ -530,7 +537,7 @@ function utilityBill(tariffId: string, points: BillPoint[]) {
   return billMonth(tariff, points, zeros);
 }
 
-export function valueYear(tariffId: string, meter: MeterTopology, powerKw: number, uploaded?: { minute: number; month: number; weekday: number; date: string; nonCartKw: number }[]) {
+export function valueYear(tariffId: string, meter: MeterTopology, powerKw: number, uploaded?: { minute: number; month: number; weekday: number; date: string; nonCartKw: number }[], onlyCharging = false) {
   const months = MONTHS.map((name, index) => {
     const month = index + 1;
     const dates = monthDates(2026, month);
@@ -550,7 +557,7 @@ export function valueYear(tariffId: string, meter: MeterTopology, powerKw: numbe
         const shape = buildShape(date, { club: CLUB_SCALE[month - 1], solar: SOLAR_SCALE[month - 1], rounds: month >= 11 || month <= 2 ? 0.45 : 1 });
         const targets = targetsFor(shape, tariffId);
         const rawUnmanaged = runForward(shape, meter, powerKw, targets, tariffId, "unmanaged", "", false);
-        const rawPlan = runForward(shape, meter, powerKw, targets, tariffId, "plan", "", false);
+        const rawPlan = runForward(shape, meter, powerKw, targets, tariffId, "plan", "", false, onlyCharging);
         rawUnmanaged.sides.forEach((side, step) => unmanaged.push(point(shape, step, side.importKw)));
         rawPlan.sides.forEach((side, step) => plan.push(point(shape, step, side.importKw)));
         wear += rawPlan.runtime.discharge.reduce((sum, row) => sum + row.reduce((inner, kw) => inner + kw, 0), 0) * STEP_HOURS * WEAR_USD_PER_KWH;

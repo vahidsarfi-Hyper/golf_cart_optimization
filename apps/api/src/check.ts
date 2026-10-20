@@ -52,6 +52,13 @@ assert.notEqual(byPercent[0]?.id, "c70");
 const discharge = dischargeNext(day, 4);
 assert.ok(discharge.length > 0, "someone can discharge at the pump spike");
 assert.ok((discharge[0]?.teeMinute ?? 0) >= 12 * 60 || discharge[0]?.teeMinute == null);
+assert.ok(day.steps.some((step) => step.plan.dischargeKw > 1), "the plan discharges when Only Charging is off");
+
+const chargeOnly = buildDay("one", 3, "", false, true);
+assert.ok(chargeOnly.steps.every((step) => step.plan.dischargeKw === 0), "Only Charging never discharges");
+assert.ok(chargeOnly.steps.some((step) => step.plan.chargeKw > 1), "Only Charging still charges in cheaper hours");
+assert.ok(chargeOnly.carts.every((cart) => cart.plan.discharge.every((kw) => kw === 0)), "no cart is commanded to discharge");
+assert.equal(chargeOnly.bills.plan.wearDollars, 0);
 
 console.log("checks ok", {
   unmanagedSpike: day.steps[spike].unmanaged.importKw,

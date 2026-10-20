@@ -235,7 +235,7 @@ h3 {
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
-  align-items: baseline;
+  align-items: center;
 }
 
 .fleet-head h2 {

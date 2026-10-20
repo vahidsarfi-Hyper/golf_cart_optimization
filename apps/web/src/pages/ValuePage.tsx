@@ -39,7 +39,7 @@ const TARIFF_NOTES: Record<(typeof TARIFFS)[number][0], string> = {
 };
 
 export function ValuePage() {
-  const { meter } = useDay();
+  const { meter, setMeter, onlyCharging, setOnlyCharging } = useDay();
   const [tariff, setTariff] = useState("pge-b19");
   const [power, setPower] = useState("3");
   const [result, setResult] = useState<ValueResult | null>(null);
@@ -49,7 +49,10 @@ export function ValuePage() {
   useEffect(() => {
     const controller = new AbortController();
     setBusy(true);
-    fetch(`/api/value?tariff=${tariff}&powerKw=${power}&meter=${meter}`, { signal: controller.signal })
+    setResult(null);
+    setError(null);
+    const charging = onlyCharging ? "&onlyCharging=1" : "";
+    fetch(`/api/value?tariff=${tariff}&powerKw=${power}&meter=${meter}${charging}`, { signal: controller.signal })
       .then((response) => response.json())
       .then((payload: ValueResult & { error?: string }) => {
         if (payload.error) throw new Error(payload.error);
@@ -60,7 +63,7 @@ export function ValuePage() {
       .catch((reason: unknown) => {
         if (reason instanceof DOMException && reason.name === "AbortError") return;
         try {
-          setResult(valueYear(tariff, meter as Meter, Number(power)) as ValueResult);
+          setResult(valueYear(tariff, meter as Meter, Number(power), undefined, onlyCharging) as ValueResult);
           setError(null);
         } catch (fallback) {
           setError(fallback instanceof Error ? fallback.message : "The year could not be priced.");
@@ -68,7 +71,7 @@ export function ValuePage() {
         setBusy(false);
       });
     return () => controller.abort();
-  }, [tariff, power, meter]);
+  }, [tariff, power, meter, onlyCharging]);
 
   async function onFile(file: File) {
     const text = await file.text();
@@ -113,9 +116,34 @@ export function ValuePage() {
       <header className="today-head">
         <div>
           <h1>Value</h1>
-          <p className="lede">A year of this fleet on the sample course. The number is the utility bill difference, after wear.</p>
+          <p className="lede">
+            A year of this fleet on the sample course. {onlyCharging ? "Only Charging is on, so the plan does not discharge. " : ""}
+            The number is the utility bill difference, after wear.
+          </p>
         </div>
         <div className="choice-row">
+          <button
+            type="button"
+            className={`meter-toggle${meter === "pump" ? " on" : ""}`}
+            aria-pressed={meter === "pump"}
+            onClick={() => setMeter(meter === "pump" ? "one" : "pump")}
+          >
+            Separate pump meter
+            <span className="meter-toggle-track" aria-hidden="true">
+              <span className="meter-toggle-knob" />
+            </span>
+          </button>
+          <button
+            type="button"
+            className={`meter-toggle${onlyCharging ? " on" : ""}`}
+            aria-pressed={onlyCharging}
+            onClick={() => setOnlyCharging(!onlyCharging)}
+          >
+            Only Charging
+            <span className="meter-toggle-track" aria-hidden="true">
+              <span className="meter-toggle-knob" />
+            </span>
+          </button>
           <label>
             Tariff
             <select value={tariff} onChange={(event) => setTariff(event.target.value)}>

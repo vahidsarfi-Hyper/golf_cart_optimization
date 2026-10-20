@@ -46,8 +46,16 @@ export function FleetPage() {
       <section className="panel">
         <div className="fleet-head">
           <h2>Send this cart next</h2>
-          <button type="button" className={`choice${priorityRule ? " on" : ""}`} onClick={() => setPriorityRule(!priorityRule)}>
-            {priorityRule ? "Priority rule" : "Optimizer order"}
+          <button
+            type="button"
+            className={`meter-toggle${priorityRule ? " on" : ""}`}
+            aria-pressed={priorityRule}
+            onClick={() => setPriorityRule(!priorityRule)}
+          >
+            Priority rule
+            <span className="meter-toggle-track" aria-hidden="true">
+              <span className="meter-toggle-knob" />
+            </span>
           </button>
         </div>
         <ol className="send-list">

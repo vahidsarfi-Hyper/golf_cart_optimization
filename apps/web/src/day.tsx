@@ -16,6 +16,8 @@ type DayState = {
   setMeterBlind: (value: boolean) => void;
   linkLoss: boolean;
   setLinkLoss: (value: boolean) => void;
+  onlyCharging: boolean;
+  setOnlyCharging: (value: boolean) => void;
   priorityRule: boolean;
   setPriorityRule: (value: boolean) => void;
 };
@@ -31,12 +33,14 @@ export function DayProvider({ children }: { children: ReactNode }) {
   const [step, setStep] = useState(40);
   const [meterBlind, setMeterBlind] = useState(false);
   const [linkLoss, setLinkLoss] = useState(false);
+  const [onlyCharging, setOnlyCharging] = useState(false);
   const [priorityRule, setPriorityRule] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams({ meter, powerKw: "3" });
     if (meterBlind) params.set("meterBlind", "1");
     if (linkLoss) params.set("linkLoss", "c22");
+    if (onlyCharging) params.set("onlyCharging", "1");
     const controller = new AbortController();
     fetch(`/api/day?${params}`, { signal: controller.signal })
       .then((response) => {
@@ -51,7 +55,7 @@ export function DayProvider({ children }: { children: ReactNode }) {
       .catch((reason: unknown) => {
         if (reason instanceof DOMException && reason.name === "AbortError") return;
         try {
-          setDay(buildDay(meter, 3, linkLoss ? "c22" : "", meterBlind) as DayPayload);
+          setDay(buildDay(meter, 3, linkLoss ? "c22" : "", meterBlind, onlyCharging) as DayPayload);
           setError(null);
           setOffline(true);
         } catch {
@@ -59,10 +63,10 @@ export function DayProvider({ children }: { children: ReactNode }) {
         }
       });
     return () => controller.abort();
-  }, [meter, meterBlind, linkLoss]);
+  }, [meter, meterBlind, linkLoss, onlyCharging]);
 
   return (
-    <DayContext.Provider value={{ day, error, offline, meter, setMeter, policy, setPolicy, step, setStep, meterBlind, setMeterBlind, linkLoss, setLinkLoss, priorityRule, setPriorityRule }}>
+    <DayContext.Provider value={{ day, error, offline, meter, setMeter, policy, setPolicy, step, setStep, meterBlind, setMeterBlind, linkLoss, setLinkLoss, onlyCharging, setOnlyCharging, priorityRule, setPriorityRule }}>
       {children}
     </DayContext.Provider>
   );
